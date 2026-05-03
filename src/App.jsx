@@ -347,36 +347,82 @@ export default function App() {
     messagesEndRef.current?.scrollIntoView({ behavior:'smooth' })
   }, [displayMsgs, isLoading])
 
-  const startRecording = useCallback(() => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SR) { setMicError('Voice not supported on this browser. Try Chrome.'); return }
-    setMicError('')
-    navigator.mediaDevices?.getUserMedia({ audio: true })
-      .then(() => {
-        const langMap = { en:'en-NG', ha:'ha-NG', yo:'yo-NG', ig:'ig-NG', pc:'en-NG' }
-        const recognition = new SR()
-        recognition.lang = langMap[activeLang] || 'en-NG'
-        recognition.continuous = false
-        recognition.interimResults = true
-        recognition.maxAlternatives = 1
-        recognition.onstart = () => { setIsRecording(true); setMicError('') }
-        recognition.onresult = (e) => {
-          const transcript = Array.from(e.results).map(r => r[0].transcript).join('')
-          setInputText(transcript)
-        }
-        recognition.onend = () => { setIsRecording(false); recognitionRef.current = null }
-        recognition.onerror = (e) => {
-          setIsRecording(false)
-          recognitionRef.current = null
-          if (e.error === 'not-allowed') setMicError('Microphone access denied. Please allow mic in your browser settings.')
-          else if (e.error === 'no-speech') setMicError('No speech detected. Try again.')
-          else setMicError('Voice error. Please try again.')
-        }
-        recognitionRef.current = recognition
-        recognition.start()
+const startRecording = useCallback(() => {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (!SR) {
+    setMicError('Voice not supported on this browser. Please type your question.')
+    return
+  }
+  setMicError('')
+
+  // Android Chrome needs this exact flow
+  const isAndroid = /android/i.test(navigator.userAgent)
+  const isChrome = /chrome/i.test(navigator.userAgent)
+
+  const startSR = () => {
+    const langMap = { en:'en-NG', ha:'ha', yo:'yo', ig:'ig', pc:'en-NG' }
+    const recognition = new SR()
+    recognition.lang = langMap[activeLang] || 'en-NG'
+    recognition.continuous = false
+    recognition.interimResults = !isAndroid // Android handles interim poorly
+    recognition.maxAlternatives = 1
+
+    recognition.onstart = () => {
+      setIsRecording(true)
+      setMicError('')
+    }
+
+    recognition.onresult = (e) => {
+      const transcript = Array.from(e.results)
+        .map(r => r[0].transcript)
+        .join('')
+      setInputText(transcript)
+    }
+
+    recognition.onspeechend = () => {
+      recognition.stop()
+    }
+
+    recognition.onend = () => {
+      setIsRecording(false)
+      recognitionRef.current = null
+    }
+
+    recognition.onerror = (e) => {
+      setIsRecording(false)
+      recognitionRef.current = null
+      if (e.error === 'not-allowed') {
+        setMicError('Microphone blocked. Go to your browser Settings → Site Settings → Microphone → allow this site.')
+      } else if (e.error === 'no-speech') {
+        setMicError('No speech detected. Tap mic and speak clearly.')
+      } else if (e.error === 'network') {
+        setMicError('Network error. Check your connection and try again.')
+      } else {
+        setMicError('Voice error. Please type your question instead.')
+      }
+    }
+
+    recognitionRef.current = recognition
+    try {
+      recognition.start()
+    } catch(e) {
+      setMicError('Could not start voice. Please type your question.')
+    }
+  }
+
+  // Always request mic permission first
+  if (navigator.mediaDevices?.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(() => startSR())
+      .catch(() => {
+        setMicError('Microphone access denied. Go to browser Settings → Site Settings → Microphone → allow this site.')
       })
-      .catch(() => setMicError('Microphone access denied. Please allow mic access and try again.'))
-  }, [activeLang])
+  } else {
+    // Fallback for older browsers
+    startSR()
+  }
+}, [activeLang])
+
 
   const stopRecording = useCallback(() => {
     recognitionRef.current?.stop()
