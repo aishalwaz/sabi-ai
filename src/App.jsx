@@ -470,8 +470,9 @@ export default function App() {
       >
         {/* HEADER — logo only, no text */}
         <div style={{ padding:'12px 16px', background:B.navyL, borderBottom:`1px solid ${B.navyB}`, display:'flex', justifyContent:'space-between', alignItems:'center', position:'sticky', top:0, zIndex:10 }}>
-          <img src="/logo.png" alt="Sabi AI" style={{ height:34, width:'auto', objectFit:'contain' }}/>
-          <div style={{ display:'flex', alignItems:'center', gap:7, background:B.goldF, border:`1px solid ${B.goldB}`, borderRadius:100, padding:'5px 13px' }}>
+          <img src="/logo.png" alt="Sabi AI" style={{ height:28, width:'auto', objectFit:'contain', maxWidth:140 }}/>
+
+         <div style={{ display:'flex', alignItems:'center', gap:7, background:B.goldF, border:`1px solid ${B.goldB}`, borderRadius:100, padding:'5px 13px' }}>
             <div style={{ width:6, height:6, borderRadius:'50%', background:B.green, animation:'liveDot 2s ease infinite' }}/>
             <span style={{ fontSize:11, fontWeight:500, color:B.white }}>1 sat</span>
             <span style={{ fontSize:12, fontWeight:700, color:B.gold }}>₦{satNgn}</span>
