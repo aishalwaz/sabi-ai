@@ -566,76 +566,111 @@ const startRecording = useCallback(() => {
               )}
             </div>
           )}
+{/* MESSAGES */}
+{hasMessages && (
+  <div style={{ padding:'16px 16px 8px', display:'flex', flexDirection:'column', gap:16 }}>
+    {displayMsgs.map((msg, i) => {
+      const cleanText =
+        typeof msg.c === 'string'
+          ? msg.c.replace(/\*(.*?)\*/g, '$1').replace(/\*/g, '')
+          : msg.c;
 
-          {/* MESSAGES */}
-          {hasMessages && (
-            <div style={{ padding:'16px 16px 8px', display:'flex', flexDirection:'column', gap:16 }}>
-              {displayMsgs.map((msg, i) => (
-                <div key={i}
-                  className={msg.r === 'user' ? 'msg-user' : 'msg-bot'}
-                  style={{ display:'flex', justifyContent: msg.r==='user' ? 'flex-end' : 'flex-start', alignItems:'flex-start', gap:9 }}
-                >
-                  {msg.r !== 'user' && (
-                    <img src="/logo.png" alt="Sabi" style={{ width:32, height:32, objectFit:'contain', flexShrink:0, marginTop:2 }}/>
-                  )}
-                  <div style={{ maxWidth:'80%', display:'flex', flexDirection:'column', alignItems: msg.r==='user' ? 'flex-end' : 'flex-start', gap:5 }}>
-                    {msg.r === 'error' ? (
-                      <div className="error-bubble">{msg.c}</div>
+      return (
+        <div key={i}
+          className={msg.r === 'user' ? 'msg-user' : 'msg-bot'}
+          style={{ display:'flex', justifyContent: msg.r==='user' ? 'flex-end' : 'flex-start', alignItems:'flex-start', gap:9 }}
+        >
+          {msg.r !== 'user' && (
+            <img src="/logo.png" alt="Sabi" style={{ width:32, height:32, objectFit:'contain', flexShrink:0, marginTop:2 }}/>
+          )}
+
+          <div style={{ maxWidth:'80%', display:'flex', flexDirection:'column', alignItems: msg.r==='user' ? 'flex-end' : 'flex-start', gap:5 }}>
+            
+            {msg.r === 'error' ? (
+              <div className="error-bubble">{cleanText}</div>
+            ) : (
+              <div style={{
+                padding:'12px 16px',
+                fontSize:14,
+                lineHeight:1.75,
+                whiteSpace:'pre-wrap',
+                fontFamily:'inherit',
+                ...(msg.r === 'user' ? {
+                  background:`linear-gradient(135deg, ${B.gold}, ${B.goldD})`,
+                  color:'#0D0A00',
+                  fontWeight:600,
+                  borderRadius:'18px 18px 4px 18px',
+                  boxShadow:'0 3px 14px rgba(212,168,67,.3)',
+                } : {
+                  background:B.navyL,
+                  color:B.white,
+                  borderRadius:'18px 18px 18px 4px',
+                  border:`1px solid ${B.navyB}`,
+                }),
+              }}>
+                
+                {msg.file && (
+                  <div style={{ marginBottom: cleanText ? 8 : 0 }}>
+                    {msg.file.type === 'image' && msg.file.previewUrl ? (
+                      <img src={msg.file.previewUrl} alt="attachment" style={{ maxWidth:200, maxHeight:160, borderRadius:10, display:'block', objectFit:'cover' }}/>
                     ) : (
-                      <div style={{
-                        padding:'12px 16px', fontSize:14, lineHeight:1.75, whiteSpace:'pre-wrap', fontFamily:'inherit',
-                        ...(msg.r === 'user' ? {
-                          background:`linear-gradient(135deg, ${B.gold}, ${B.goldD})`,
-                          color:'#0D0A00', fontWeight:600, borderRadius:'18px 18px 4px 18px',
-                          boxShadow:'0 3px 14px rgba(212,168,67,.3)',
-                        } : {
-                          background:B.navyL, color:B.white,
-                          borderRadius:'18px 18px 18px 4px', border:`1px solid ${B.navyB}`,
-                        }),
-                      }}>
-                        {msg.file && (
-                          <div style={{ marginBottom: msg.c ? 8 : 0 }}>
-                            {msg.file.type === 'image' && msg.file.previewUrl ? (
-                              <img src={msg.file.previewUrl} alt="attachment" style={{ maxWidth:200, maxHeight:160, borderRadius:10, display:'block', objectFit:'cover' }}/>
-                            ) : (
-                              <div className="msg-file-pill">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                                  <polyline points="14 2 14 8 20 8"/>
-                                </svg>
-                                <span>{msg.file.name}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {msg.c}
+                      <div className="msg-file-pill">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                          <polyline points="14 2 14 8 20 8"/>
+                        </svg>
+                        <span>{msg.file.name}</span>
                       </div>
                     )}
-                    {msg.r === 'bot' && (
-                      <button className="listen-btn" onClick={() => handleListen(msg.c, i)}
-                        style={{ display:'flex', alignItems:'center', gap:4, background:'transparent', border:'none', padding:'2px 4px', borderRadius:6, fontSize:11, color: speakingIdx===i ? B.gold : B.dim, fontFamily:'inherit', cursor:'pointer' }}>
-                        <SpeakerIcon/>{speakingIdx===i ? 'Stop' : 'Listen'}
-                      </button>
-                    )}
                   </div>
-                </div>
-              ))}
+                )}
 
-              {isLoading && (
-                <div className="msg-bot" style={{ display:'flex', alignItems:'flex-start', gap:9 }}>
-                  <img src="/logo.png" alt="Sabi" style={{ width:32, height:32, objectFit:'contain', flexShrink:0, marginTop:2 }}/>
-                  <div style={{ background:B.navyL, borderRadius:'18px 18px 18px 4px', padding:'14px 18px', border:`1px solid ${B.navyB}` }}>
-                    <div style={{ display:'flex', gap:5, alignItems:'center' }}>
-                      {[0,1,2].map(j => (
-                        <div key={j} style={{ width:7, height:7, borderRadius:'50%', background:B.gold, animation:`dotBounce 1.2s ${j*0.15}s ease-in-out infinite` }}/>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef}/>
-            </div>
-          )}
+                {cleanText}
+              </div>
+            )}
+
+            {msg.r === 'bot' && (
+              <button
+                className="listen-btn"
+                onClick={() => handleListen(cleanText, i)}
+                style={{
+                  display:'flex',
+                  alignItems:'center',
+                  gap:4,
+                  background:'transparent',
+                  border:'none',
+                  padding:'2px 4px',
+                  borderRadius:6,
+                  fontSize:11,
+                  color: speakingIdx===i ? B.gold : B.dim,
+                  fontFamily:'inherit',
+                  cursor:'pointer'
+                }}
+              >
+                <SpeakerIcon/>{speakingIdx===i ? 'Stop' : 'Listen'}
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    })}
+
+    {isLoading && (
+      <div className="msg-bot" style={{ display:'flex', alignItems:'flex-start', gap:9 }}>
+        <img src="/logo.png" alt="Sabi" style={{ width:32, height:32, objectFit:'contain', flexShrink:0, marginTop:2 }}/>
+        <div style={{ background:B.navyL, borderRadius:'18px 18px 18px 4px', padding:'14px 18px', border:`1px solid ${B.navyB}` }}>
+          <div style={{ display:'flex', gap:5, alignItems:'center' }}>
+            {[0,1,2].map(j => (
+              <div key={j} style={{ width:7, height:7, borderRadius:'50%', background:B.gold, animation:`dotBounce 1.2s ${j*0.15}s ease-in-out infinite` }}/>
+            ))}
+          </div>
+        </div>
+      </div>
+    )}
+
+    <div ref={messagesEndRef}/>
+  </div>
+)}
         </div>
 
         {/* INPUT BAR */}
