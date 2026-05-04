@@ -266,154 +266,52 @@ const CSS = `
 
 function SendIcon({ color }) {
   return (
-  <div className="min-h-screen w-full bg-[#0B1220] text-white flex flex-col items-center pb-28">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <path d="M12 19V5M5 12L12 5L19 12" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  )
+}
 
-    {/* HEADER */}
-    <header className="w-full max-w-md flex items-center justify-between py-4 px-4">
-      <div className="flex items-center gap-2">
-        <img src="/logo.png" className="w-8 h-8" />
-        <h1 className="text-lg font-semibold text-[#F5C266]">Sabi AI</h1>
-      </div>
+function SpeakerIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+      <path d="M11 5L6 9H2v6h4l5 4V5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M19.07 4.93a10 10 0 010 14.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M15.54 8.46a5 5 0 010 7.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  )
+}
 
-      <div className="text-xs bg-[#1A2235] px-3 py-1 rounded-full border border-[#2A3550] flex items-center gap-2">
-        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-        <span>1 sat = ₦{satNgn}</span>
-      </div>
-    </header>
+function MicIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+      <rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="2"/>
+      <path d="M5 10a7 7 0 0014 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  )
+}
 
-    {/* LANGUAGE */}
-    <div className="flex gap-3 mt-1 mb-4">
-      {["en","ha","yo","ig","pc"].map(l => (
-        <button
-          key={l}
-          className={`px-4 py-1.5 rounded-full border text-xs ${
-            l === activeLang
-              ? "border-[#F5C266] bg-[#1A1F2E] text-[#F5C266]"
-              : "border-[#2A3550] bg-[#141B29] text-gray-400"
-          }`}
-          onClick={() => setActiveLang(l)}
-        >
-          {l.toUpperCase()}
-        </button>
-      ))}
+function AttachIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+    </svg>
+  )
+}
+
+function SplashScreen({ onDone }) {
+  const [leaving, setLeaving] = useState(false)
+  useEffect(() => {
+    const t1 = setTimeout(() => setLeaving(true), 1800)
+    const t2 = setTimeout(() => onDone(), 2250)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [onDone])
+  return (
+    <div className={leaving ? 'splash-leaving' : ''} style={{ position:'fixed', inset:0, zIndex:999, background:'#1B2232', display:'flex', alignItems:'center', justifyContent:'center' }}>
+      <img src="/logo.png" alt="Sabi AI" style={{ width:280, maxWidth:'75vw', height:'auto', objectFit:'contain' }}/>
     </div>
-
-    {/* HOME (NO MESSAGES) */}
-    {displayMsgs.length === 0 && !isLoading && (
-      <>
-        {/* LOGO */}
-        <div className="mt-4 mb-2">
-          <div className="w-16 h-16 bg-[#F5C266]/20 rounded-full flex items-center justify-center animate-pulse">
-            <img src="/logo.png" className="w-8 h-8 opacity-90" />
-          </div>
-        </div>
-
-        {/* HERO */}
-        <h2 className="text-2xl font-bold mt-2 text-center">
-          {welcome.greeting.split("you")[0]}
-          <span className="text-[#F5C266]">you</span>?
-        </h2>
-
-        <p className="text-center text-sm text-gray-300 mt-2 max-w-sm px-4">
-          {welcome.sub}
-        </p>
-
-        <p className="text-xs text-gray-400 flex gap-2 mt-3">
-          {welcome.langs.split(" · ").map((t, i) => (
-            <span key={t}>{t}{i < 4 && " • "}</span>
-          ))}
-        </p>
-
-        {/* CARDS */}
-        <div className="grid grid-cols-2 gap-4 mt-8 px-4 w-full max-w-md">
-
-          {prompts.map((p, i) => (
-            <button
-              key={i}
-              onClick={() => sendMessage(p.msg)}
-              className="bg-[#131A2A] border border-[#1F273A] rounded-2xl p-4 flex flex-col items-start shadow hover:scale-[1.02] transition"
-            >
-              <div className="w-10 h-10 mb-2 rounded-full bg-[#1F273A] flex items-center justify-center text-[#F5C266] text-lg">
-                {["₿","📈","🏪","?"][i]}
-              </div>
-              <div className="font-semibold text-sm">{p.label}</div>
-            </button>
-          ))}
-
-        </div>
-
-        {/* MIC TEXT */}
-        {voiceSupported && (
-          <div className="mt-6 text-xs text-gray-400 flex items-center gap-2">
-            <MicIcon />
-            <span>Tap the mic to speak instead of typing</span>
-          </div>
-        )}
-      </>
-    )}
-
-    {/* CHAT */}
-    {displayMsgs.length > 0 && (
-      <div className="w-full max-w-md px-4 mt-4 flex flex-col gap-4">
-
-        {displayMsgs.map((msg, i) => (
-          <div
-            key={i}
-            className={`p-3 rounded-xl text-sm ${
-              msg.r === "user"
-                ? "bg-[#F5C266] text-black self-end"
-                : msg.r === "error"
-                ? "bg-red-500/10 text-red-400"
-                : "bg-[#141B29] border border-[#2A3550]"
-            }`}
-          >
-            {msg.c}
-          </div>
-        ))}
-
-        {isLoading && (
-          <div className="text-gray-400 text-sm">Sabi is thinking…</div>
-        )}
-
-      </div>
-    )}
-
-    {/* INPUT */}
-    <div className="fixed bottom-6 px-4 w-full max-w-md">
-      <div className="flex items-center bg-[#141B29] border border-[#2A3550] py-3 px-4 rounded-full">
-
-        <input
-          value={inputText}
-          onChange={e => setInputText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Ask anything..."
-          className="flex-1 bg-transparent outline-none text-sm placeholder-gray-400"
-        />
-
-        {voiceSupported && !inputText && (
-          <button onClick={toggleMic} className="ml-2 text-[#F5C266]">
-            <MicIcon />
-          </button>
-        )}
-
-        {(inputText || attachedFile) && (
-          <button
-            onClick={() => sendMessage()}
-            className="ml-2 bg-[#F5C266] text-black px-3 py-1 rounded-full text-sm"
-          >
-            Send
-          </button>
-        )}
-
-      </div>
-
-      <p className="text-center text-[10px] text-gray-500 mt-3">
-        Bitcoin Abuja • Powered by Fedi
-      </p>
-    </div>
-
-  </div>
-)
+  )
 }
 
 export default function App() {
