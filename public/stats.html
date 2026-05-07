@@ -10,33 +10,24 @@
   --navy:#0E1520;--navyL:#151F2E;--navyLL:#1E2B3D;
   --gold:#D4A843;--goldD:#A67C2A;--goldF:rgba(212,168,67,.08);--goldB:rgba(212,168,67,.2);
   --white:#F0F4FF;--mid:#7A8EAA;--dim:#3D4F63;
-  --green:#22D37A;--teal:#2DD4BF;--orange:#F97316;--red:#F87171;--purple:#A78BFA;
+  --green:#22D37A;--teal:#2DD4BF;--orange:#F97316;--purple:#A78BFA;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{background:var(--navy);color:var(--white);font-family:'Satoshi',sans-serif;min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.6;}
+body{background:var(--navy);color:var(--white);font-family:'Satoshi',sans-serif;min-height:100vh;}
 .glow-1{position:fixed;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(212,168,67,0.08) 0%,transparent 70%);pointer-events:none;z-index:0;}
 .glow-2{position:fixed;bottom:-200px;left:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(45,212,191,0.06) 0%,transparent 70%);pointer-events:none;z-index:0;}
 .container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:40px 24px 80px;}
 .site-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:48px;padding-bottom:24px;border-bottom:1px solid var(--dim);}
 .brand{display:flex;align-items:center;gap:14px;}
 .brand-logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--navyLL),var(--navy));border:1px solid var(--goldB);display:flex;align-items:center;justify-content:center;font-size:20px;}
-.brand-name{font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;color:var(--gold);letter-spacing:-0.5px;}
+.brand-name{font-family:'Cabinet Grotesk',sans-serif;font-size:20px;font-weight:800;color:var(--gold);}
 .brand-sub{font-size:11px;color:var(--mid);letter-spacing:1px;text-transform:uppercase;}
 .live-badge{display:flex;align-items:center;gap:7px;background:rgba(34,211,122,0.08);border:1px solid rgba(34,211,122,0.25);border-radius:100px;padding:6px 14px;font-size:12px;color:var(--green);font-weight:500;}
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:livePulse 2s ease infinite;}
-@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(0.8)}}
-.ticker{background:var(--navyLL);border:1px solid var(--dim);border-radius:12px;padding:10px 16px;margin-bottom:32px;display:flex;align-items:center;gap:16px;overflow:hidden;}
-.ticker-label{color:var(--gold);font-weight:600;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;flex-shrink:0;font-size:10px;}
-.ticker-scroll{flex:1;overflow:hidden;}
-.ticker-inner{display:flex;gap:32px;animation:tickerMove 30s linear infinite;white-space:nowrap;}
-.ticker-item{color:var(--mid);flex-shrink:0;font-size:12px;}
-.ticker-item span{color:var(--white);font-weight:500;}
-@keyframes tickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.impact-bar{background:linear-gradient(135deg,var(--navyL),var(--navyLL));border:1px solid var(--goldB);border-radius:20px;padding:28px 32px;margin-bottom:32px;display:flex;align-items:center;gap:24px;position:relative;overflow:hidden;}
-.impact-bar::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(212,168,67,0.04),transparent);pointer-events:none;}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.5}}
+.impact-bar{background:linear-gradient(135deg,var(--navyL),var(--navyLL));border:1px solid var(--goldB);border-radius:20px;padding:28px 32px;margin-bottom:32px;display:flex;align-items:center;gap:24px;}
 .impact-icon{font-size:40px;flex-shrink:0;}
-.impact-headline{font-family:'Cabinet Grotesk',sans-serif;font-size:22px;font-weight:800;color:var(--white);line-height:1.3;margin-bottom:6px;letter-spacing:-0.5px;}
+.impact-headline{font-family:'Cabinet Grotesk',sans-serif;font-size:22px;font-weight:800;color:var(--white);line-height:1.3;margin-bottom:6px;}
 .impact-headline span{color:var(--gold);}
 .impact-sub{font-size:13px;color:var(--mid);line-height:1.6;}
 .section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);font-weight:500;margin-bottom:16px;}
@@ -66,7 +57,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .chart-area{height:120px;display:flex;align-items:flex-end;gap:8px;margin-top:8px;}
 .chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;}
 .chart-bar{width:100%;border-radius:6px 6px 3px 3px;background:linear-gradient(180deg,var(--gold),var(--goldD));opacity:0.6;transition:height 1.2s cubic-bezier(0.22,1,0.36,1);}
-.chart-bar:hover{opacity:1;}
 .chart-bar.today{opacity:1;box-shadow:0 0 16px rgba(212,168,67,0.4);}
 .chart-label{font-size:10px;color:var(--dim);font-weight:500;}
 .feed{display:flex;flex-direction:column;}
@@ -76,14 +66,20 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .feed-content{flex:1;min-width:0;}
 .feed-text{font-size:13px;color:var(--white);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .feed-meta{display:flex;gap:10px;margin-top:3px;}
-.feed-lang{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;letter-spacing:0.5px;}
+.feed-lang{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;}
 .feed-time{font-size:10px;color:var(--dim);}
 .merchant-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
 .merchant-card{background:var(--navyLL);border:1px solid var(--dim);border-radius:14px;padding:14px;display:flex;align-items:center;gap:10px;}
 .merchant-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--gold),var(--goldD));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.merchant-info{flex:1;min-width:0;}
 .merchant-name{font-size:12.5px;font-weight:600;color:var(--white);line-height:1.3;}
-.merchant-city{font-size:10px;color:var(--mid);}
-.merchant-badge{margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex-shrink:0;}
+.merchant-meta{font-size:10px;color:var(--mid);margin-top:2px;}
+.merchant-badge{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex-shrink:0;}
+.empty-state{text-align:center;padding:24px;color:var(--dim);font-size:13px;}
+.requests-section{margin-top:16px;}
+.request-card{background:var(--navyLL);border:1px solid var(--dim);border-radius:14px;padding:14px;margin-bottom:8px;}
+.request-name{font-size:13px;font-weight:600;color:var(--white);}
+.request-meta{font-size:11px;color:var(--mid);margin-top:4px;}
 .footer{text-align:center;margin-top:48px;padding-top:24px;border-top:1px solid var(--dim);font-size:12px;color:var(--dim);}
 .footer a{color:var(--gold);text-decoration:none;}
 @media(max-width:600px){
@@ -99,6 +95,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <div class="glow-1"></div>
 <div class="glow-2"></div>
 <div class="container">
+
   <header class="site-header">
     <div class="brand">
       <div class="brand-logo">₿</div>
@@ -109,26 +106,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     </div>
     <div class="live-badge"><div class="live-dot"></div>Live Data</div>
   </header>
-
-  <div class="ticker">
-    <div class="ticker-label">Live</div>
-    <div class="ticker-scroll">
-      <div class="ticker-inner">
-        <span class="ticker-item">Hausa question answered — <span>"Yaya ake saya Bitcoin da Naira?"</span></span>
-        <span class="ticker-item">New merchant onboarded — <span>Zainab Kitchen, Garki</span></span>
-        <span class="ticker-item">Pidgin question — <span>"Abeg how I go buy sats with Naira?"</span></span>
-        <span class="ticker-item">New member joined Bitcoin Abuja</span>
-        <span class="ticker-item">Yoruba question — <span>"Kini Bitcoin ati bawo ni o se n sisise?"</span></span>
-        <span class="ticker-item">Merchant banner generated — <span>Musa Suya Joint, Minna</span></span>
-        <span class="ticker-item">English question — <span>"How do I back up my Fedi wallet?"</span></span>
-        <span class="ticker-item">Igbo question — <span>"Kedu ka m ga-esi zuo Bitcoin?"</span></span>
-        <span class="ticker-item">Hausa question answered — <span>"Yaya ake saya Bitcoin da Naira?"</span></span>
-        <span class="ticker-item">New merchant onboarded — <span>Zainab Kitchen, Garki</span></span>
-        <span class="ticker-item">Pidgin question — <span>"Abeg how I go buy sats with Naira?"</span></span>
-        <span class="ticker-item">New member joined Bitcoin Abuja</span>
-      </div>
-    </div>
-  </div>
 
   <div class="impact-bar">
     <div class="impact-icon">🇳🇬</div>
@@ -152,15 +129,15 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     </div>
     <div class="hero-stat orange">
       <div class="stat-label">Merchants Active</div>
-      <div class="stat-value" id="merCount">6</div>
-      <div class="stat-delta">Abuja &amp; Minna</div>
+      <div class="stat-value" id="merCount">—</div>
+      <div class="stat-delta" id="merDelta">Loading...</div>
     </div>
   </div>
 
   <div class="two-col">
     <div class="card">
       <div class="card-title"><div class="ctd" style="background:var(--gold)"></div>Language Breakdown</div>
-      <div class="lang-list" id="langList"><div style="color:var(--mid);font-size:13px;">Loading...</div></div>
+      <div class="lang-list" id="langList"><div class="empty-state">Loading...</div></div>
     </div>
     <div class="card">
       <div class="card-title"><div class="ctd" style="background:var(--teal)"></div>Daily Conversations</div>
@@ -179,8 +156,13 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     </div>
     <div class="card">
       <div class="card-title"><div class="ctd" style="background:var(--orange)"></div>Active Merchants</div>
-      <div class="merchant-grid" id="merchantGrid"></div>
+      <div class="merchant-grid" id="merchantGrid"><div class="empty-state" style="grid-column:span 2">Loading merchants...</div></div>
     </div>
+  </div>
+
+  <div class="card requests-section">
+    <div class="card-title"><div class="ctd" style="background:var(--purple)"></div>Community Requests</div>
+    <div id="requestsList"><div class="empty-state">Loading...</div></div>
   </div>
 
   <div class="footer">
@@ -191,151 +173,172 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 </div>
 
 <script>
-const SUPABASE_URL = 'https://iunrwioirmovwtwnziiv.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1bnJ3aW9pcm1vdnd0d256aWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwODg0MjksImV4cCI6MjA5MzY2NDQyOX0.vOHZeTZJGbIB2rHgqvMoi8CkTv50RdLIGMTWWq-PmQ8'
+const SB_URL = 'https://iunrwioirmovwtwnziiv.supabase.co'
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml1bnJ3aW9pcm1vdnd0d256aWl2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwODg0MjksImV4cCI6MjA5MzY2NDQyOX0.vOHZeTZJGbIB2rHgqvMoi8CkTv50RdLIGMTWWq-PmQ8'
 
-const MERCHANTS = [
-  { name:'Fatima Kitchen',   city:'Garki, Abuja',  emoji:'🍲' },
-  { name:'Zainab Fabrics',   city:'Wuse, Abuja',   emoji:'👗' },
-  { name:'Musa Suya Joint',  city:'Minna, Niger',  emoji:'🍖' },
-  { name:'Ibrahim Tech Hub', city:'Kubwa, Abuja',  emoji:'💻' },
-  { name:'Halima Boutique',  city:'Garki, Abuja',  emoji:'👜' },
-  { name:'Al-Amin Store',    city:'Lugbe, Abuja',  emoji:'🛒' },
-]
-
-const LANG_COLORS = { en:'#D4A843', ha:'#2DD4BF', pc:'#F97316', yo:'#A78BFA', ig:'#F87171' }
-const LANG_NAMES  = { en:'English', ha:'Hausa', pc:'Nigerian Pidgin', yo:'Yoruba', ig:'Igbo' }
+const CAT_EMOJI = {food:'🍲',fashion:'👗',beauty:'💇',tech:'💻',pharmacy:'💊',grocery:'🛒',transport:'🚗',education:'📚',services:'🔧',other:'🏪'}
+const LANG_COLORS = {en:'#D4A843',ha:'#2DD4BF',pc:'#F97316',yo:'#A78BFA',ig:'#F87171'}
+const LANG_NAMES  = {en:'English',ha:'Hausa',pc:'Nigerian Pidgin',yo:'Yoruba',ig:'Igbo'}
 
 const SAMPLE_Q = [
-  { text:'Yaya ake saya Bitcoin da Naira a Fedi?', lang:'ha', icon:'💬', time:'2m ago' },
-  { text:'How do I back up my wallet recovery words?', lang:'en', icon:'🔐', time:'5m ago' },
-  { text:'Abeg how I go accept Bitcoin for my shop?', lang:'pc', icon:'🏪', time:'8m ago' },
-  { text:'Kini iye 1 sat ni Naira ni bayi?', lang:'yo', icon:'💰', time:'11m ago' },
-  { text:'What is the Lightning Network?', lang:'en', icon:'⚡', time:'14m ago' },
+  {text:'Yaya ake saya Bitcoin da Naira a Fedi?',lang:'ha',icon:'💬',time:'2m ago'},
+  {text:'How do I back up my wallet recovery words?',lang:'en',icon:'🔐',time:'5m ago'},
+  {text:'Abeg how I go accept Bitcoin for my shop?',lang:'pc',icon:'🏪',time:'8m ago'},
+  {text:'Kini iye 1 sat ni Naira ni bayi?',lang:'yo',icon:'💰',time:'11m ago'},
+  {text:'What is the Lightning Network?',lang:'en',icon:'⚡',time:'14m ago'},
 ]
 
-async function sbFetch(table, params) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
-    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+async function sb(table, params) {
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?${params}`, {
+    headers:{apikey:SB_KEY,Authorization:`Bearer ${SB_KEY}`}
   })
   return r.json()
 }
 
 function animateCount(el, target) {
   const start = performance.now()
-  const update = (now) => {
-    const p = Math.min((now - start) / 1500, 1)
-    const e = 1 - Math.pow(1 - p, 3)
-    el.textContent = Math.round(e * target)
-    if (p < 1) requestAnimationFrame(update)
+  const run = now => {
+    const p = Math.min((now-start)/1500,1)
+    const e = 1-Math.pow(1-p,3)
+    el.textContent = Math.round(e*target)
+    if(p<1) requestAnimationFrame(run)
   }
-  requestAnimationFrame(update)
+  requestAnimationFrame(run)
 }
 
 async function loadStats() {
   try {
-    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
-    const weekAgo    = new Date(Date.now() - 7*24*60*60*1000).toISOString()
+    const monthStart = new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString()
+    const weekAgo    = new Date(Date.now()-7*24*60*60*1000).toISOString()
 
-    const [allC, weekC, allM, weekM, langD, dailyD] = await Promise.all([
-      sbFetch('conversations', `select=id&created_at=gte.${monthStart}`),
-      sbFetch('conversations', `select=id&created_at=gte.${weekAgo}`),
-      sbFetch('onboardings',   `select=id&type=eq.member&created_at=gte.${monthStart}`),
-      sbFetch('onboardings',   `select=id&type=eq.member&created_at=gte.${weekAgo}`),
-      sbFetch('conversations', `select=language&created_at=gte.${monthStart}`),
-      sbFetch('conversations', `select=created_at&created_at=gte.${weekAgo}`),
+    const [allC,weekC,allM,weekM,langD,dailyD,merchants,requests] = await Promise.all([
+      sb('conversations',`select=id&created_at=gte.${monthStart}`),
+      sb('conversations',`select=id&created_at=gte.${weekAgo}`),
+      sb('onboardings',`select=id&type=eq.member&created_at=gte.${monthStart}`),
+      sb('onboardings',`select=id&type=eq.member&created_at=gte.${weekAgo}`),
+      sb('conversations',`select=language&created_at=gte.${monthStart}`),
+      sb('conversations',`select=created_at&created_at=gte.${weekAgo}`),
+      sb('onboardings',`select=shop_name,location,category,created_at&type=eq.merchant&order=created_at.desc`),
+      sb('community_requests',`select=name,community,city,created_at&order=created_at.desc&limit=5`),
     ])
 
-    const tc = Array.isArray(allC)  ? allC.length  : 0
-    const wc = Array.isArray(weekC) ? weekC.length : 0
-    const tm = Array.isArray(allM)  ? allM.length  : 0
-    const wm = Array.isArray(weekM) ? weekM.length : 0
+    // Counts
+    const tc=Array.isArray(allC)?allC.length:0
+    const wc=Array.isArray(weekC)?weekC.length:0
+    const tm=Array.isArray(allM)?allM.length:0
+    const wm=Array.isArray(weekM)?weekM.length:0
+    const merList=Array.isArray(merchants)?merchants.filter(m=>m.shop_name):[]
 
-    animateCount(document.getElementById('convCount'), tc)
-    animateCount(document.getElementById('membCount'), tm)
-    document.getElementById('convDelta').textContent = `↑ +${wc} this week`
-    document.getElementById('membDelta').textContent = `↑ +${wm} this week`
+    animateCount(document.getElementById('convCount'),tc)
+    animateCount(document.getElementById('membCount'),tm)
+    animateCount(document.getElementById('merCount'),merList.length)
+    document.getElementById('convDelta').textContent=`↑ +${wc} this week`
+    document.getElementById('membDelta').textContent=`↑ +${wm} this week`
+    document.getElementById('merDelta').textContent=merList.length>0?`Latest: ${merList[0].shop_name}`:'Be the first merchant'
 
     // Language bars
-    const lc = {}
-    if (Array.isArray(langD)) langD.forEach(r => { const l=r.language||'en'; lc[l]=(lc[l]||0)+1 })
-    const total = Object.values(lc).reduce((a,b)=>a+b,0) || 1
-    const langList = document.getElementById('langList')
-    langList.innerHTML = ''
-    const sorted = Object.entries(lc).sort((a,b)=>b[1]-a[1])
-    if (!sorted.length) ['en','ha','pc','yo','ig'].forEach(l => sorted.push([l,0]))
-    sorted.forEach(([lang, count], i) => {
-      const pct = Math.round((count/total)*100)
-      const color = LANG_COLORS[lang]||'#8A9BB5'
-      const row = document.createElement('div')
-      row.className = 'lang-row'
-      row.innerHTML = `<div class="lang-meta"><span class="lang-name">${LANG_NAMES[lang]||lang}</span><span class="lang-count">${count} conversations</span></div><div class="lang-track"><div class="lang-fill" style="width:0%;background:${color}"></div></div>`
+    const lc={}
+    if(Array.isArray(langD)) langD.forEach(r=>{const l=r.language||'en';lc[l]=(lc[l]||0)+1})
+    const total=Object.values(lc).reduce((a,b)=>a+b,0)||1
+    const langList=document.getElementById('langList')
+    langList.innerHTML=''
+    const sorted=Object.entries(lc).sort((a,b)=>b[1]-a[1])
+    if(!sorted.length) ['en','ha','pc','yo','ig'].forEach(l=>sorted.push([l,0]))
+    sorted.forEach(([lang,count],i)=>{
+      const pct=Math.round((count/total)*100)
+      const color=LANG_COLORS[lang]||'#8A9BB5'
+      const row=document.createElement('div')
+      row.className='lang-row'
+      row.innerHTML=`<div class="lang-meta"><span class="lang-name">${LANG_NAMES[lang]||lang}</span><span class="lang-count">${count} conversations</span></div><div class="lang-track"><div class="lang-fill" style="width:0%;background:${color}"></div></div>`
       langList.appendChild(row)
-      setTimeout(() => { row.querySelector('.lang-fill').style.width = pct+'%' }, 400+i*100)
+      setTimeout(()=>{row.querySelector('.lang-fill').style.width=pct+'%'},400+i*100)
     })
 
     // Daily chart
-    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
-    const dc = new Array(7).fill(0)
-    if (Array.isArray(dailyD)) dailyD.forEach(r => { const d=new Date(r.created_at).getDay(); dc[d===0?6:d-1]++ })
-    const chartArea = document.getElementById('chartArea')
-    chartArea.innerHTML = ''
-    const maxC = Math.max(...dc, 1)
-    const todayIdx = new Date().getDay()===0?6:new Date().getDay()-1
-    dc.forEach((count, i) => {
-      const wrap = document.createElement('div')
-      wrap.className = 'chart-bar-wrap'
-      wrap.innerHTML = `<div class="chart-bar${i===todayIdx?' today':''}" style="height:4px" title="${count}"></div><div class="chart-label">${days[i]}</div>`
+    const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    const dc=new Array(7).fill(0)
+    if(Array.isArray(dailyD)) dailyD.forEach(r=>{const d=new Date(r.created_at).getDay();dc[d===0?6:d-1]++})
+    const chartArea=document.getElementById('chartArea')
+    chartArea.innerHTML=''
+    const maxC=Math.max(...dc,1)
+    const todayIdx=new Date().getDay()===0?6:new Date().getDay()-1
+    dc.forEach((count,i)=>{
+      const wrap=document.createElement('div')
+      wrap.className='chart-bar-wrap'
+      wrap.innerHTML=`<div class="chart-bar${i===todayIdx?' today':''}" style="height:4px" title="${count} conversations"></div><div class="chart-label">${days[i]}</div>`
       chartArea.appendChild(wrap)
-      setTimeout(() => { wrap.querySelector('.chart-bar').style.height = Math.max((count/maxC)*100,4)+'%' }, 600+i*80)
+      setTimeout(()=>{wrap.querySelector('.chart-bar').style.height=Math.max((count/maxC)*100,4)+'%'},600+i*80)
     })
 
+    // Merchants — live from Supabase
+    const grid=document.getElementById('merchantGrid')
+    grid.innerHTML=''
+    if(merList.length===0){
+      grid.innerHTML='<div class="empty-state" style="grid-column:span 2">No merchants onboarded yet. Be the first!</div>'
+    } else {
+      merList.forEach(m=>{
+        const emoji=CAT_EMOJI[m.category]||'🏪'
+        const card=document.createElement('div')
+        card.className='merchant-card'
+        card.innerHTML=`<div class="merchant-avatar">${emoji}</div><div class="merchant-info"><div class="merchant-name">${m.shop_name}</div><div class="merchant-meta">${m.location||'Abuja, Nigeria'}</div></div><div class="merchant-badge"></div>`
+        grid.appendChild(card)
+      })
+    }
+
+    // Community requests
+    const reqList=document.getElementById('requestsList')
+    reqList.innerHTML=''
+    if(!Array.isArray(requests)||requests.length===0){
+      reqList.innerHTML='<div class="empty-state">No community requests yet.</div>'
+    } else {
+      requests.forEach(r=>{
+        const card=document.createElement('div')
+        card.className='request-card'
+        const date=new Date(r.created_at).toLocaleDateString('en-GB',{day:'numeric',month:'short'})
+        card.innerHTML=`<div class="request-name">${r.name||'Anonymous'} — ${r.community||'Unknown Community'}</div><div class="request-meta">📍 ${r.city||'Unknown'} · ${date}</div>`
+        reqList.appendChild(card)
+      })
+    }
+
   } catch(e) {
-    document.getElementById('convCount').textContent = '0'
-    document.getElementById('membCount').textContent = '0'
-    document.getElementById('convDelta').textContent = 'Starting up...'
-    document.getElementById('membDelta').textContent = 'Starting up...'
+    console.error(e)
+    document.getElementById('convCount').textContent='0'
+    document.getElementById('membCount').textContent='0'
+    document.getElementById('merCount').textContent='0'
+    document.getElementById('convDelta').textContent='Starting up...'
+    document.getElementById('membDelta').textContent='Starting up...'
+    document.getElementById('merDelta').textContent='Starting up...'
   }
 }
 
 function renderFeed() {
-  const feed = document.getElementById('liveFeed')
-  feed.innerHTML = ''
-  SAMPLE_Q.forEach(q => {
-    const color = LANG_COLORS[q.lang]||'#D4A843'
-    const item = document.createElement('div')
-    item.className = 'feed-item'
-    item.innerHTML = `<div class="feed-icon" style="background:${color}18;border:1px solid ${color}30;">${q.icon}</div><div class="feed-content"><div class="feed-text">${q.text}</div><div class="feed-meta"><span class="feed-lang" style="background:${color}18;color:${color};">${q.lang.toUpperCase()}</span><span class="feed-time">${q.time}</span></div></div>`
+  const feed=document.getElementById('liveFeed')
+  feed.innerHTML=''
+  SAMPLE_Q.forEach(q=>{
+    const color=LANG_COLORS[q.lang]||'#D4A843'
+    const item=document.createElement('div')
+    item.className='feed-item'
+    item.innerHTML=`<div class="feed-icon" style="background:${color}18;border:1px solid ${color}30;">${q.icon}</div><div class="feed-content"><div class="feed-text">${q.text}</div><div class="feed-meta"><span class="feed-lang" style="background:${color}18;color:${color};">${q.lang.toUpperCase()}</span><span class="feed-time">${q.time}</span></div></div>`
     feed.appendChild(item)
   })
 }
 
-function renderMerchants() {
-  const grid = document.getElementById('merchantGrid')
-  MERCHANTS.forEach(m => {
-    const card = document.createElement('div')
-    card.className = 'merchant-card'
-    card.innerHTML = `<div class="merchant-avatar">${m.emoji}</div><div><div class="merchant-name">${m.name}</div><div class="merchant-city">${m.city}</div></div><div class="merchant-badge"></div>`
-    grid.appendChild(card)
-  })
-}
-
-const newQ = [
-  { text:'Kedu ka m ga-esi zuo Bitcoin na Naira?', lang:'ig', icon:'🌍', time:'just now' },
-  { text:'How do I convert sats to Naira?', lang:'en', icon:'💱', time:'just now' },
-  { text:'Sannu, menene Lightning Network?', lang:'ha', icon:'⚡', time:'just now' },
-  { text:'Mo fẹ gba Bitcoin fun owo mi', lang:'yo', icon:'💰', time:'just now' },
+const rotateQ=[
+  {text:'Kedu ka m ga-esi zuo Bitcoin na Naira?',lang:'ig',icon:'🌍',time:'just now'},
+  {text:'How do I convert sats to Naira?',lang:'en',icon:'💱',time:'just now'},
+  {text:'Sannu, menene Lightning Network?',lang:'ha',icon:'⚡',time:'just now'},
+  {text:'Mo fẹ gba Bitcoin fun owo mi',lang:'yo',icon:'💰',time:'just now'},
 ]
-let qIdx = 0
-setInterval(() => {
-  const q = newQ[qIdx%newQ.length]; qIdx++
-  const feed = document.getElementById('liveFeed')
-  const items = feed.querySelectorAll('.feed-item')
-  const last = items[items.length-1]
-  if (!last) return
-  const color = LANG_COLORS[q.lang]||'#D4A843'
-  last.style.opacity='0'; last.style.transform='translateX(10px)'; last.style.transition='opacity 0.3s,transform 0.3s'
-  setTimeout(() => {
+let qIdx=0
+setInterval(()=>{
+  const q=rotateQ[qIdx%rotateQ.length];qIdx++
+  const feed=document.getElementById('liveFeed')
+  const items=feed.querySelectorAll('.feed-item')
+  const last=items[items.length-1]
+  if(!last)return
+  const color=LANG_COLORS[q.lang]||'#D4A843'
+  last.style.opacity='0';last.style.transform='translateX(10px)';last.style.transition='opacity 0.3s,transform 0.3s'
+  setTimeout(()=>{
     last.querySelector('.feed-icon').style.background=color+'18'
     last.querySelector('.feed-icon').style.borderColor=color+'30'
     last.querySelector('.feed-icon').textContent=q.icon
@@ -344,15 +347,14 @@ setInterval(() => {
     last.querySelector('.feed-lang').style.color=color
     last.querySelector('.feed-lang').textContent=q.lang.toUpperCase()
     last.querySelector('.feed-time').textContent=q.time
-    last.style.opacity='1'; last.style.transform='translateX(0)'
-    feed.insertBefore(last, feed.firstChild)
-  }, 300)
-}, 4000)
+    last.style.opacity='1';last.style.transform='translateX(0)'
+    feed.insertBefore(last,feed.firstChild)
+  },300)
+},4000)
 
 loadStats()
 renderFeed()
-renderMerchants()
-setInterval(loadStats, 60000)
+setInterval(loadStats,60000)
 </script>
 </body>
 </html>
