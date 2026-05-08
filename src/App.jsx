@@ -102,7 +102,7 @@ function speakDevice(text, lang) {
   window.speechSynthesis.cancel()
   const u = new SpeechSynthesisUtterance(text.replace(/[₿⚡●#*•①②③④⑤]/g, ' '))
   u.lang = { en: 'en-NG', ha: 'ha', yo: 'yo', ig: 'ig', pc: 'en-NG' }[lang] || 'en-NG'
-  u.rate = 0.9
+  u.rate = 0.92
   window.speechSynthesis.speak(u)
   return true
 }
@@ -166,32 +166,32 @@ const LANG_NAMES_S = { en: 'English', ha: 'Hausa', pc: 'Nigerian Pidgin', yo: 'Y
 
 const PROMPTS_BY_LANG = {
   en: [
+    { label: 'BTC price in Naira', msg: 'What is the current Bitcoin price in Naira, and what is 1 sat worth?' },
     { label: 'Buy BTC with Naira', msg: 'How do I buy Bitcoin with Naira on Fedi?' },
-    { label: 'Sat price in Naira', msg: 'What is 1 sat worth in Naira right now?' },
     { label: 'Accept Bitcoin at my shop', msg: '__MERCHANT__' },
     { label: 'New to Bitcoin? Start here', msg: '__MEMBER__' },
   ],
   ha: [
+    { label: 'Farashin BTC a Naira', msg: 'Nawa ne farashin Bitcoin a Naira yanzu, kuma nawa ne 1 sat?' },
     { label: 'Saya Bitcoin da Naira', msg: 'Ta yaya zan saya Bitcoin da Naira a Fedi?' },
-    { label: 'Farashin sat a Naira', msg: 'Nawa ne 1 sat a Naira yanzu?' },
     { label: 'Karbi Bitcoin a kantin na', msg: '__MERCHANT__' },
     { label: 'Sabon zuwa Bitcoin?', msg: '__MEMBER__' },
   ],
   yo: [
+    { label: 'Iye BTC ni Naira', msg: 'Elo ni iye Bitcoin ni Naira ni bayi, ati pe 1 sat nawo?' },
     { label: 'Ra Bitcoin pelu Naira', msg: 'Bawo ni mo se le ra Bitcoin pelu Naira lori Fedi?' },
-    { label: 'Iye sat ni Naira', msg: 'Elo ni 1 sat ni Naira ni bayi?' },
     { label: 'Gba Bitcoin ni ile itaja mi', msg: '__MERCHANT__' },
     { label: 'Tuntun si Bitcoin?', msg: '__MEMBER__' },
   ],
   ig: [
+    { label: 'Ulo BTC na Naira', msg: 'Ego ole ka Bitcoin ji na Naira ugbu a, kwa ego ole bu 1 sat?' },
     { label: 'Zuo Bitcoin na Naira', msg: 'Kedu ka m ga-esi zuo Bitcoin na Naira na Fedi?' },
-    { label: 'Onu ego sat na Naira', msg: 'Ego ole bu 1 sat na Naira ugbu a?' },
     { label: "Nata Bitcoin n'ulo ahia m", msg: '__MERCHANT__' },
     { label: 'Ohuru na Bitcoin?', msg: '__MEMBER__' },
   ],
   pc: [
+    { label: 'BTC price for Naira', msg: 'How much Bitcoin price be for Naira now, and how much be 1 sat?' },
     { label: 'Buy Bitcoin with Naira', msg: 'Abeg how I go take buy Bitcoin with Naira for Fedi?' },
-    { label: 'How much be 1 sat', msg: 'How much be 1 sat in Naira right now?' },
     { label: 'Accept Bitcoin for my shop', msg: '__MERCHANT__' },
     { label: 'New to Bitcoin?', msg: '__MEMBER__' },
   ],
@@ -200,36 +200,36 @@ const PROMPTS_BY_LANG = {
 const WELCOME_BY_LANG = {
   en: {
     greeting: 'How can I help you?',
-    sub: 'Ask me anything — Bitcoin, Fedi, merchants, savings, payments, or anything else on your mind.',
+    sub: 'Ask, learn, or start using Bitcoin in your language.',
     langs: 'English · Hausa · Yoruba · Igbo · Pidgin',
   },
   ha: {
     greeting: 'Ina iya taimaka maka?',
-    sub: 'Tambaye ni komai — Bitcoin, Fedi, yan kasuwa, ajiya, biyan kudi, ko kowane tambaya da kake da ita.',
+    sub: 'Tambaya, koya, ko fara amfani da Bitcoin a harshenka.',
     langs: 'Hausa · English · Yoruba · Igbo · Pidgin',
   },
   yo: {
     greeting: 'Bawo ni mo se le ran o lowo?',
-    sub: 'Beere ohunkohun — Bitcoin, Fedi, awon onisowo, ifowopamo, awon isanwo, tabi ohunkohun ti o wa.',
+    sub: 'Beere, ko eko, tabi bere fun lilo Bitcoin ni ede re.',
     langs: 'Yoruba · Hausa · English · Igbo · Pidgin',
   },
   ig: {
     greeting: 'Kedu ka m ga-esi nyere gi aka?',
-    sub: "Juo m ihe o bula — Bitcoin, Fedi, ndi ahia, nchekwa ego, ugwo, ma o bu ihe o bula di n'obi gi.",
+    sub: 'Jụọ, mụta, ma ọ bụ bido iji Bitcoin n’asụsụ gị.',
     langs: 'Igbo · Hausa · Yoruba · English · Pidgin',
   },
   pc: {
     greeting: 'How I fit help you?',
-    sub: 'Ask me anything — Bitcoin, Fedi, merchants, savings, payments, or any other thing wey dey your mind.',
+    sub: 'Ask, learn, or start to use Bitcoin for your side.',
     langs: 'Pidgin · Hausa · Yoruba · Igbo · English',
   },
 }
 
 const ERROR_BY_LANG = {
   en: "Sabi couldn't respond right now. Please check your connection and try again.",
-  ha: 'Sabi bai iya amsa yanzu ba. Da fatan za a duba hadin ku ku sake gwadawa.',
+  ha: 'Sabi bai iya amsa yanzu ba. Da fatan a duba hadin ku ku sake gwadawa.',
   yo: 'Sabi ko le dahun ni bayi. Jowo sayewo asopo re ki o tun gbiyanju.',
-  ig: 'Sabi enwehi ike iza ugbu a. Biko lelee njiko gi ma gbalia ozo.',
+  ig: 'Sabi enweghi ike aza ugbu a. Biko lelee njikọ gi ma nwaa ozo.',
   pc: 'Sabi no fit answer now. Abeg check your connection and try again.',
 }
 
@@ -246,21 +246,21 @@ const CONTEXT_CARDS = {
     {
       icon: '📉',
       title: 'Your Naira is losing value — fast.',
-      body: 'Since 2020, the Naira has lost over 80% of its purchasing power. If you saved ₦1,000,000 in 2020, it now buys what ₦200,000 could then. This is not an accident — the government prints more Naira every year, reducing the value of every note you hold.',
+      body: 'Since 2020, the Naira has lost over 80% of its purchasing power. If you saved ₦1,000,000 in 2020, it now buys what ₦200,000 could then.',
       stat: '₦1,000,000 in 2020 = ₦200,000 in buying power today',
       statColor: '#F87171',
     },
     {
       icon: '₿',
-      title: 'Bitcoin cannot be inflated. Ever.',
-      body: "There will only ever be 21 million Bitcoin in existence — hardcoded into the software forever. No government, no bank, no president can change this. While the Naira supply grows every year, Bitcoin's supply is fixed. This is why Nigerians are stacking sats.",
+      title: 'Bitcoin cannot be inflated.',
+      body: 'There will only ever be 21 million Bitcoin in existence — hardcoded into the software forever. No government can change this.',
       stat: 'Fixed supply: 21 million Bitcoin. Forever.',
       statColor: '#D4A843',
     },
     {
       icon: '📈',
-      title: 'Small amounts add up significantly.',
-      body: 'You do not need to buy a whole Bitcoin. The smallest unit is 1 satoshi — about ₦1 right now. Even ₦500 a week, invested consistently in Bitcoin, adds up to a meaningful savings position over time. The goal is to start, not to start big.',
+      title: 'Small amounts add up.',
+      body: 'You do not need a whole Bitcoin. The smallest unit is 1 satoshi. Even ₦500 a week becomes meaningful over time.',
       stat: '₦500/week × 52 weeks = ₦26,000 in Bitcoin savings',
       statColor: '#34C77A',
     },
@@ -268,22 +268,22 @@ const CONTEXT_CARDS = {
   remittance: [
     {
       icon: '🏦',
-      title: 'Nigerian bank transfers are expensive.',
-      body: 'Sending money across Nigerian banks costs between ₦50 and ₦100 per transfer. Sending internationally costs even more — Western Union and bank wires charge 3% to 8% fees plus unfavorable exchange rates. On a ₦50,000 transfer that is up to ₦4,000 gone in fees.',
+      title: 'Bank transfers are expensive.',
+      body: 'Sending money across banks costs fees. International transfers cost even more with worse exchange rates.',
       stat: 'Bank fees on ₦50,000 transfer: up to ₦4,000',
       statColor: '#F87171',
     },
     {
       icon: '⚡',
-      title: 'Bitcoin Lightning: instant, nearly free.',
-      body: 'The Lightning Network enables instant payments anywhere in the world for less than ₦1 in fees. Send to Lagos, London, or New York in under 1 second. The recipient can convert to local currency immediately. No middleman. No waiting.',
+      title: 'Lightning is instant.',
+      body: 'The Lightning Network makes Bitcoin payments fast and nearly free.',
       stat: 'Lightning fee on ₦50,000 transfer: less than ₦1',
       statColor: '#34C77A',
     },
     {
       icon: '🇳🇬',
       title: 'Keep more of your money.',
-      body: 'Every naira you save on fees stays in your pocket. For someone sending money home monthly, switching to Bitcoin Lightning can save tens of thousands of Naira per year. Fedi makes this simple — your wallet is built in and Cashwyre converts Naira in minutes.',
+      body: 'Every naira you save on fees stays in your pocket.',
       stat: 'Potential annual savings: ₦48,000+ for regular senders',
       statColor: '#D4A843',
     },
@@ -294,32 +294,32 @@ const LEARN_CARDS = [
   {
     icon: '₿',
     title: 'What is Bitcoin?',
-    body: 'Bitcoin is digital money that no bank or government controls. There will only ever be 21 million Bitcoins — forever. Nobody can print more. You own it completely and nobody can freeze it or take it from you.',
-    highlight: 'Think of it like cash — except you can send it anywhere in the world in under 1 second at almost zero cost.',
+    body: 'Bitcoin is digital money no bank or government controls.',
+    highlight: 'You can send it anywhere in the world in under 1 second at almost zero cost.',
   },
   {
     icon: '📉',
-    title: 'Why does this matter for Nigerians?',
-    body: 'Since 2020 the Naira has lost over 80% of its value. If you saved 1,000,000 Naira in 2020 it now buys what 200,000 Naira could then. Bitcoin cannot be inflated. Its supply is fixed forever at 21 million.',
-    highlight: 'Nigerians who saved even 10% of their income in Bitcoin since 2020 are significantly better off today.',
+    title: 'Why does this matter?',
+    body: 'Since 2020 the Naira has lost a lot of value.',
+    highlight: 'Saving even a little in Bitcoin can protect purchasing power.',
   },
   {
     icon: '⚡',
     title: 'What is a Satoshi?',
-    body: 'You do not need to buy a whole Bitcoin. The smallest unit is called a satoshi or sat. 1 Bitcoin = 100,000,000 sats. Right now 1 sat costs about 1 Naira. You can start with just 500 Naira worth of sats.',
-    highlight: 'Stack sats weekly — even 500 Naira a week adds up. Small amounts today can become significant wealth over time.',
+    body: '1 Bitcoin = 100,000,000 sats. Start with small amounts.',
+    highlight: 'Stack sats weekly — even 500 Naira a week adds up.',
   },
   {
     icon: '🌍',
-    title: 'What is Lightning Network?',
-    body: 'Lightning is a layer on top of Bitcoin that makes payments instant — under 1 second — and nearly free — less than 1 Naira per transaction. You can send to Lagos, London, or New York instantly.',
-    highlight: 'Fedi uses Lightning for all payments automatically. You never need to understand the technical details — it just works.',
+    title: 'What is Lightning?',
+    body: 'Lightning makes Bitcoin payments instant and nearly free.',
+    highlight: 'Fedi uses Lightning for payments automatically.',
   },
   {
     icon: '🔐',
-    title: 'How do I keep my Bitcoin safe?',
-    body: 'When you create a wallet on Fedi, you are given recovery words — usually 12 or 24 words. These words ARE your money. Write them on paper immediately. Store them somewhere safe. Never take a screenshot. Never share them with anyone.',
-    highlight: 'If you lose your phone, your recovery words let you restore your entire wallet on any device. Without them, your Bitcoin is gone forever.',
+    title: 'How do I keep Bitcoin safe?',
+    body: 'Write your recovery words on paper and never screenshot them.',
+    highlight: 'Those words let you restore your wallet if your phone is lost.',
   },
 ]
 
@@ -328,17 +328,17 @@ const MERCHANT_STEPS = [
     ins: 'Step 1 of 6 — Install Fedi',
     q: 'Do you have the Fedi app installed on your phone?',
     yes: "Great. Let's move on.",
-    no: 'Download Fedi from the App Store or Google Play — search "Fedi Bitcoin". Come back when installed.',
+    no: 'Download Fedi from the App Store or Google Play — search "Fedi Bitcoin".',
   },
   {
     ins: 'Step 2 of 6 — Join a Federation',
-    q: 'Open Fedi and tap the Wallet tab. Join any available federation — this creates your Bitcoin wallet. Done?',
+    q: 'Open Fedi and tap Wallet. Join any available federation to create your wallet.',
     yes: 'Your Bitcoin wallet is ready.',
-    no: 'Tap the Wallet tab at the bottom of Fedi. You will see options to join a federation. Pick any one.',
+    no: 'Tap Wallet and choose any federation.',
   },
   {
     ins: 'Step 3 of 6 — Join Community',
-    q: 'Now join the Bitcoin Abuja community on Fedi. This is separate from your wallet. Have you joined?',
+    q: 'Now join the Bitcoin Abuja community on Fedi. Have you joined?',
     yes: 'Welcome to the community.',
     no: 'Let us get you in right now.',
     joinScreen: true,
@@ -347,20 +347,20 @@ const MERCHANT_STEPS = [
     ins: 'Step 4 of 6 — Secure your wallet',
     q: 'Have you backed up your wallet recovery words on paper?',
     yes: 'Excellent. Your funds are protected.',
-    no: 'Open Fedi → Profile → Personal Backup → write every word on physical paper. Never screenshot. Come back when done.',
+    no: 'Open Fedi → Profile → Personal Backup → write every word on paper.',
   },
   {
     ins: 'Step 5 of 6 — Fund your wallet (optional)',
-    q: 'Have you added any sats to your wallet? You can skip this — you can receive payments without having sats.',
+    q: 'Have you added any sats to your wallet? You can skip this.',
     yes: 'Good.',
-    no: 'No problem. You can receive Bitcoin payments with zero balance. Move on.',
+    no: 'No problem. You can receive Bitcoin payments with zero balance.',
     canSkip: true,
   },
   {
     ins: 'Step 6 of 6 — Get your payment QR',
-    q: 'Open Fedi → tap Wallet tab → tap Receive. You should see your payment QR code. Can you see it?',
+    q: 'Open Fedi → Wallet → Receive. Can you see your payment QR code?',
     yes: "You're ready. Let's build your banner.",
-    no: 'Make sure you are on the Wallet tab. Tap Receive and your QR code will appear.',
+    no: 'Tap Receive and your QR code will appear.',
   },
 ]
 
@@ -369,17 +369,17 @@ const MEMBER_STEPS = [
     ins: 'Step 1 of 4 — Install Fedi',
     q: 'Do you have the Fedi app installed on your phone?',
     yes: "Great. Let's move on.",
-    no: 'Download Fedi from the App Store or Google Play — search "Fedi Bitcoin". Come back when installed.',
+    no: 'Download Fedi from the App Store or Google Play — search "Fedi Bitcoin".',
   },
   {
     ins: 'Step 2 of 4 — Join a Federation',
-    q: 'Open Fedi and tap the Wallet tab. Join any available federation — this creates your Bitcoin wallet. Done?',
+    q: 'Open Fedi and tap Wallet. Join any available federation.',
     yes: 'Your wallet is ready.',
-    no: 'Tap the Wallet tab at the bottom of Fedi. Pick any federation — this creates your Bitcoin wallet.',
+    no: 'Tap Wallet and choose any federation.',
   },
   {
     ins: 'Step 3 of 4 — Join Community',
-    q: 'Now join the Bitcoin Abuja community on Fedi. This is your community space. Have you joined?',
+    q: 'Now join the Bitcoin Abuja community on Fedi. Have you joined?',
     yes: 'Welcome in.',
     no: 'Let us get you in right now.',
     joinScreen: true,
@@ -388,32 +388,39 @@ const MEMBER_STEPS = [
     ins: 'Step 4 of 4 — Secure your wallet',
     q: 'Have you written your wallet recovery words on paper?',
     yes: "You're all set. Let's finish.",
-    no: 'Open Fedi → Profile → Personal Backup → write every word on physical paper. Never screenshot. Come back when done.',
+    no: 'Open Fedi → Profile → Personal Backup → write every word on paper.',
   },
 ]
 
 async function sendToAI(history, btc, activeLang, community) {
   const satN = btc ? (btc.ngn / 100000000).toFixed(2) : '1.54'
   const usd = btc ? btc.usd.toLocaleString() : '96,300'
-  const ngnM = btc ? (btc.ngn / 1000000).toFixed(0) : '154'
+  const ngnM = btc ? btc.ngn / 1000000 : 154
   const system =
     'You are Sabi — the AI Bitcoin guide for ' +
     community.name +
     ' in ' +
     community.city +
-    ' on the Fedi app. LANGUAGE: Always respond in the same language the user writes in. FORMATTING: Never use asterisks or markdown. Plain text only. Numbers for lists. PRICES: 1 satoshi = ' +
+    ' on the Fedi app. ' +
+    'LANGUAGE: Always respond in the same language the user writes in. ' +
+    'FORMATTING: Never use asterisks or markdown. Plain text only. Use numbered lists when helpful. ' +
+    'PRICES: 1 satoshi = ' +
     satN +
     ' Naira. 1 Bitcoin = $' +
     usd +
     ' = ' +
-    ngnM +
-    'M Naira. TO BUY BITCOIN: Fedi — Mini Apps — Cashwyre — Crypto Onramp — NGN — transfer from any Nigerian bank — wait 5-10 minutes. No ID needed. TO ACCEPT BITCOIN AT SHOP: Fedi — Wallet tab — Receive — show QR to customer — they scan — instant payment — convert to Naira via Cashwyre anytime. COMMUNITY: ' +
+    ngnM.toFixed(0) +
+    'M Naira. Always mention sats and full Bitcoin together when discussing price. ' +
+    'TO BUY BITCOIN: Fedi — Mini Apps — Cashwyre — Crypto Onramp — NGN — transfer from any Nigerian bank — wait 5-10 minutes. No ID needed. ' +
+    'TO ACCEPT BITCOIN AT SHOP: Fedi — Wallet tab — Receive — show QR to customer — they scan — instant payment — convert to Naira via Cashwyre anytime. ' +
+    'COMMUNITY: ' +
     community.name +
     ' has ' +
     community.memberCount +
     ' members and ' +
     community.merchantCount +
-    ' merchants. Led by Aisha Ummi Waziri. Always be warm, direct and human.'
+    ' merchants. ' +
+    'Always be direct, helpful, and human.'
 
   const response = await fetch('/api/chat', {
     method: 'POST',
@@ -426,7 +433,7 @@ async function sendToAI(history, btc, activeLang, community) {
   return { text: data.content?.[0]?.text || '', audio: data.audio || null }
 }
 
-async function fetchStats() {
+async function fetchStats(communityId = 'bitcoin-abuja') {
   const SB_URL = import.meta.env.VITE_SUPABASE_URL
   const SB_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
   const h = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` }
@@ -436,13 +443,13 @@ async function fetchStats() {
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
   const [allC, weekC, allM, weekM, langD, dailyD, merchants, requests] = await Promise.all([
-    q('conversations', `select=id&created_at=gte.${monthStart}`),
-    q('conversations', `select=id&created_at=gte.${weekAgo}`),
-    q('onboardings', `select=id&type=eq.member&created_at=gte.${monthStart}`),
-    q('onboardings', `select=id&type=eq.member&created_at=gte.${weekAgo}`),
-    q('conversations', `select=language&created_at=gte.${monthStart}`),
-    q('conversations', `select=created_at&created_at=gte.${weekAgo}`),
-    q('onboardings', `select=shop_name,location,category,created_at&type=eq.merchant&order=created_at.desc`),
+    q('conversations', `select=id&community_id=eq.${communityId}&created_at=gte.${monthStart}`),
+    q('conversations', `select=id&community_id=eq.${communityId}&created_at=gte.${weekAgo}`),
+    q('onboardings', `select=id&type=eq.member&community_id=eq.${communityId}&created_at=gte.${monthStart}`),
+    q('onboardings', `select=id&type=eq.member&community_id=eq.${communityId}&created_at=gte.${weekAgo}`),
+    q('conversations', `select=language&community_id=eq.${communityId}&created_at=gte.${monthStart}`),
+    q('conversations', `select=created_at&community_id=eq.${communityId}&created_at=gte.${weekAgo}`),
+    q('onboardings', `select=shop_name,location,category,created_at&community_id=eq.${communityId}&type=eq.merchant&order=created_at.desc`),
     q('community_requests', `select=name,community,city,created_at&order=created_at.desc&limit=5`),
   ])
 
@@ -513,7 +520,7 @@ body{background:#1B2232;-webkit-font-smoothing:antialiased;}
 .card-slide{animation:cardSlide 0.35s cubic-bezier(0.22,1,0.36,1) both;}
 .done-pop{animation:donePop 0.5s cubic-bezier(0.22,1,0.36,1) both;}
 .speaking{animation:speakPulse 1.5s ease-in-out infinite;}
-.prompt-card{transition:transform 0.18s,border-color 0.18s;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.prompt-card{transition:transform 0.18s,border-color 0.18s,background 0.18s;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .prompt-card:active{transform:scale(0.97);}
 .send-btn{transition:transform 0.15s;}
 .send-btn:not(:disabled):active{transform:scale(0.96);}
@@ -611,7 +618,8 @@ const inputStyle = {
   fontFamily: 'inherit',
   outline: 'none',
 }
-function SubHeader({ title, titleColor, onBack }) {
+
+function SubHeader({ title, titleColor, onBack, rightSlot = null }) {
   return (
     <div
       style={{
@@ -620,6 +628,7 @@ function SubHeader({ title, titleColor, onBack }) {
         borderBottom: `1px solid ${B.navyB}`,
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'space-between',
         gap: 12,
         position: 'sticky',
         top: 0,
@@ -636,10 +645,13 @@ function SubHeader({ title, titleColor, onBack }) {
           color: titleColor || B.white,
           letterSpacing: 0.5,
           textTransform: 'uppercase',
+          textAlign: 'center',
+          flex: 1,
         }}
       >
         {title}
       </div>
+      <div style={{ minWidth: 40, display: 'flex', justifyContent: 'flex-end' }}>{rightSlot}</div>
     </div>
   )
 }
@@ -706,7 +718,6 @@ function SplashScreen({ onDone }) {
     </div>
   )
 }
-
 function ShareCard({ type, shopName = '', shopCategory = '', community = COMMUNITIES['bitcoin-abuja'], onClose }) {
   const title = type === 'merchant' ? 'My shop accepts Bitcoin now' : 'I joined Bitcoin Abuja'
   const subtitle =
@@ -949,19 +960,19 @@ function CommunityRequestForm({ onBack }) {
   )
 }
 
-function StatsView({ onBack }) {
+function StatsView({ onBack, communityId = 'bitcoin-abuja' }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
   useEffect(() => {
-    fetchStats()
+    fetchStats(communityId)
       .then(d => {
         setData(d)
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [])
+  }, [communityId])
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -1294,7 +1305,7 @@ function ContextCarousel({ cards, onDone, onBack, title, titleColor }) {
 
         <div className="card-slide" key={idx} style={{ background: B.navyL, border: `1px solid ${B.navyB}`, borderRadius: 20, padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ fontSize: 40 }}>{card.icon}</div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: B.white, lineHeight: 1.3 }}>{card.title}</div>
+          <div style={{ fontSize: 18, fontWeight: 900, color: B.white, lineHeight: 1.3 }}>{card.title}</div>
           <div style={{ fontSize: 14, color: B.mid, lineHeight: 1.75 }}>{card.body}</div>
           <div className="stat-pill" style={{ background: `${card.statColor}18`, border: `1px solid ${card.statColor}33`, color: card.statColor }}>
             {card.stat}
@@ -1430,20 +1441,20 @@ function MerchantOnboarding({ onBack, community }) {
         img.src = src
       })
 
-    const wrapText = (ctx, text, x, y, maxWidth, lineHeight, maxLines = 99) => {
+    const fitText = (ctx, text, x, y, maxWidth, lineHeight, maxLines = 2) => {
       const words = String(text || '').split(/\s+/)
       let line = ''
       let lines = 0
-      for (let n = 0; n < words.length; n++) {
-        const testLine = line ? line + ' ' + words[n] : words[n]
-        if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+      for (let i = 0; i < words.length; i++) {
+        const test = line ? line + ' ' + words[i] : words[i]
+        if (ctx.measureText(test).width > maxWidth && i > 0) {
           ctx.fillText(line, x, y)
-          line = words[n]
+          line = words[i]
           y += lineHeight
           lines++
           if (lines >= maxLines - 1) break
         } else {
-          line = testLine
+          line = test
         }
       }
       if (lines < maxLines) ctx.fillText(line, x, y)
@@ -1461,28 +1472,18 @@ function MerchantOnboarding({ onBack, community }) {
       const ctx = canvas.getContext('2d')
 
       const bg = ctx.createLinearGradient(0, 0, W, H)
-      bg.addColorStop(0, '#0F1726')
+      bg.addColorStop(0, '#0E1524')
       bg.addColorStop(0.5, '#1B2232')
       bg.addColorStop(1, '#0B1220')
       ctx.fillStyle = bg
       ctx.fillRect(0, 0, W, H)
 
-      const accent = ctx.createLinearGradient(0, 0, W, 0)
-      accent.addColorStop(0, '#F97316')
-      accent.addColorStop(0.5, '#D4A843')
-      accent.addColorStop(1, '#F97316')
-      ctx.fillStyle = accent
-      ctx.fillRect(0, 0, W, isPrint ? 10 : 12)
-
-      ctx.save()
-      ctx.globalAlpha = 0.08
-      for (let i = 0; i < 120; i++) {
-        ctx.fillStyle = i % 2 === 0 ? '#D4A843' : '#2DD4BF'
-        ctx.beginPath()
-        ctx.arc((i * 97) % W, (i * 53) % H, i % 3 === 0 ? 1.5 : 1, 0, Math.PI * 2)
-        ctx.fill()
-      }
-      ctx.restore()
+      const topBand = ctx.createLinearGradient(0, 0, W, 0)
+      topBand.addColorStop(0, '#F97316')
+      topBand.addColorStop(0.55, '#D4A843')
+      topBand.addColorStop(1, '#F97316')
+      ctx.fillStyle = topBand
+      ctx.fillRect(0, 0, W, isPrint ? 12 : 14)
 
       const cat = BUSINESS_CATEGORIES.find(c => c.id === shopCategory)
       const catEmoji = cat?.emoji || '🏪'
@@ -1491,60 +1492,64 @@ function MerchantOnboarding({ onBack, community }) {
       const loc = shopLocation || ''
       const [s1, s2] = BILINGUAL[bannerLang] || BILINGUAL.en
 
-      if (isPrint) {
-        const leftX = 70
-        const leftW = 640
-        const rightX = 820
-        const rightW = 350
+      ctx.fillStyle = 'rgba(255,255,255,0.04)'
+      rrect(ctx, 42, 42, W - 84, H - 84, 28)
+      ctx.fill()
 
-        ctx.fillStyle = 'rgba(255,255,255,0.04)'
-        rrect(ctx, 50, 40, W - 100, H - 110, 28)
-        ctx.fill()
+      const drawLogo = (img, x, y, w, h) => {
+        if (img) ctx.drawImage(img, x, y, w, h)
+      }
+
+      if (isPrint) {
+        const leftX = 72
+        const leftW = 640
+        const rightX = 824
+        const rightW = 344
 
         ctx.fillStyle = 'rgba(27,34,50,0.9)'
-        rrect(ctx, leftX - 18, 82, leftW, 430, 28)
+        rrect(ctx, leftX - 20, 84, leftW, 420, 28)
         ctx.fill()
 
         ctx.fillStyle = 'rgba(255,255,255,0.96)'
-        rrect(ctx, rightX - 18, 70, rightW, 430, 28)
+        rrect(ctx, rightX - 16, 86, rightW, 420, 28)
         ctx.fill()
 
-        if (btcImg) ctx.drawImage(btcImg, 72, 58, 198, 56)
-        if (fediImg) ctx.drawImage(fediImg, W - 160, 58, 120, 36)
+        drawLogo(btcImg, 72, 56, 190, 54)
+        drawLogo(fediImg, W - 152, 56, 108, 32)
 
         ctx.textAlign = 'left'
         ctx.textBaseline = 'top'
 
         ctx.fillStyle = '#D4A843'
         ctx.font = '700 22px Satoshi, Arial'
-        ctx.fillText('BITCOIN MERCHANT SIGNAGE', leftX, 120)
+        ctx.fillText('BITCOIN ACCEPTED HERE', leftX, 118)
 
         ctx.fillStyle = '#EDF2FF'
-        ctx.font = '900 60px Satoshi, Arial'
-        wrapText(ctx, name, leftX, 162, 560, 64, 2)
+        ctx.font = '900 58px Satoshi, Arial'
+        fitText(ctx, name, leftX, 160, 560, 62, 2)
 
         ctx.fillStyle = '#F97316'
         ctx.font = '900 44px Satoshi, Arial'
-        ctx.fillText('Accepts Bitcoin', leftX, 300)
+        ctx.fillText('Accept Bitcoin', leftX, 294)
 
         ctx.fillStyle = '#2DD4BF'
         ctx.font = '700 22px Satoshi, Arial'
-        ctx.fillText('Lightning payments. Instant settlement.', leftX, 360)
+        ctx.fillText('Lightning payments. Instant settlement.', leftX, 352)
 
-        ctx.fillStyle = '#8A9BB5'
-        ctx.font = '500 21px Satoshi, Arial'
-        if (loc) ctx.fillText('📍 ' + loc, leftX, 404)
+        if (loc) {
+          ctx.fillStyle = '#8A9BB5'
+          ctx.font = '500 21px Satoshi, Arial'
+          ctx.fillText('📍 ' + loc, leftX, 394)
+        }
 
         ctx.fillStyle = '#EDF2FF'
-        ctx.font = '600 20px Satoshi, Arial'
-        ctx.fillText(catEmoji + '  ' + catLabel, leftX, 440)
+        ctx.font = '700 20px Satoshi, Arial'
+        ctx.fillText(catEmoji + '  ' + catLabel, leftX, loc ? 432 : 396)
 
         ctx.fillStyle = '#8A9BB5'
-        ctx.font = '500 18px Satoshi, Arial'
-        wrapText(ctx, s1, leftX, 472, 560, 22, 2)
-        if (s2) {
-          ctx.fillText(s2, leftX, 500)
-        }
+        ctx.font = '500 17px Satoshi, Arial'
+        fitText(ctx, s1, leftX, loc ? 466 : 430, 560, 22, 2)
+        if (s2) ctx.fillText(s2, leftX, loc ? 494 : 456)
 
         ctx.fillStyle = 'rgba(255,255,255,0.96)'
         rrect(ctx, rightX, 116, 312, 312, 24)
@@ -1565,45 +1570,44 @@ function MerchantOnboarding({ onBack, community }) {
         ctx.font = '700 14px Satoshi, Arial'
         ctx.fillText('No POS needed', rightX + 156, 436)
 
-        if (fediImg) ctx.drawImage(fediImg, 72, H - 56, 108, 32)
+        ctx.textAlign = 'left'
         ctx.fillStyle = '#EDF2FF'
         ctx.font = '500 15px Satoshi, Arial'
-        ctx.textAlign = 'right'
-        ctx.fillText('sabibtc.vercel.app', W - 70, H - 44)
-      } else {
-        const heroX = 70
-        const heroY = 68
+        ctx.fillText('Bitcoin Abuja · Powered by Fedi', 72, H - 50)
 
+        if (fediImg) ctx.drawImage(fediImg, W - 154, H - 52, 112, 32)
+      } else {
         ctx.fillStyle = 'rgba(255,255,255,0.04)'
         rrect(ctx, 44, 44, W - 88, H - 88, 30)
         ctx.fill()
 
-        if (btcImg) ctx.drawImage(btcImg, 68, 56, 180, 50)
+        drawLogo(btcImg, 68, 56, 180, 50)
+
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'top'
 
         ctx.fillStyle = '#D4A843'
         ctx.font = '700 24px Satoshi, Arial'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'top'
-        ctx.fillText('BITCOIN ACCEPTED HERE', W / 2, heroY + 18)
+        ctx.fillText('BITCOIN ACCEPTED HERE', W / 2, 118)
 
         ctx.fillStyle = '#EDF2FF'
         ctx.font = '900 66px Satoshi, Arial'
-        wrapText(ctx, name, W / 2, 120, 900, 72, 2)
+        fitText(ctx, name, W / 2, 164, 900, 72, 2)
 
         ctx.fillStyle = '#F97316'
-        ctx.font = '900 56px Satoshi, Arial'
-        ctx.fillText('Bitcoin Lightning', W / 2, 250)
+        ctx.font = '900 54px Satoshi, Arial'
+        ctx.fillText('Bitcoin Lightning', W / 2, 260)
 
         ctx.fillStyle = '#8A9BB5'
         ctx.font = '500 22px Satoshi, Arial'
-        ctx.fillText(loc || 'Abuja, Nigeria', W / 2, 324)
+        ctx.fillText(loc || 'Abuja, Nigeria', W / 2, 332)
 
         ctx.fillStyle = '#2DD4BF'
         ctx.font = '700 22px Satoshi, Arial'
-        ctx.fillText(catEmoji + ' ' + catLabel, W / 2, 360)
+        ctx.fillText(catEmoji + ' ' + catLabel, W / 2, 368)
 
         ctx.fillStyle = 'rgba(255,255,255,0.96)'
-        rrect(ctx, 140, 430, 800, 400, 32)
+        rrect(ctx, 140, 430, 800, 390, 32)
         ctx.fill()
 
         ctx.fillStyle = '#0B1220'
@@ -1614,15 +1618,15 @@ function MerchantOnboarding({ onBack, community }) {
 
         ctx.fillStyle = '#8A9BB5'
         ctx.font = '500 18px Satoshi, Arial'
-        ctx.fillText('Bitcoin Abuja • Powered by Fedi', W / 2, 790)
+        ctx.fillText('Bitcoin Abuja • Powered by Fedi', W / 2, 792)
 
         ctx.fillStyle = '#D4A843'
         ctx.font = '700 18px Satoshi, Arial'
-        ctx.fillText(s1, W / 2, 824)
+        ctx.fillText(s1, W / 2, 826)
         if (s2) {
           ctx.fillStyle = '#8A9BB5'
           ctx.font = '500 15px Satoshi, Arial'
-          ctx.fillText(s2, W / 2, 852)
+          ctx.fillText(s2, W / 2, 854)
         }
 
         if (fediImg) ctx.drawImage(fediImg, W / 2 - 60, H - 58, 120, 34)
@@ -1784,11 +1788,1065 @@ function MerchantOnboarding({ onBack, community }) {
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ fontSize: 15, fontWeight: 700, color: B.white, marginBottom: 4 }}>Choose your banner language</div>
           {[
-            { key: 'en', title: 'English only', sub: '"now accepts Bitcoin · Scan to pay"' },
-            { key: 'en-ha', title: 'English + Hausa', sub: '"now accepts Bitcoin · Muna karbar Bitcoin"' },
-            { key: 'en-yo', title: 'English + Yoruba', sub: '"now accepts Bitcoin · A gba Bitcoin"' },
-            { key: 'en-ig', title: 'English + Igbo', sub: '"now accepts Bitcoin · Anyị na-anabata Bitcoin"' },
-            { key: 'en-pc', title: 'English + Pidgin', sub: '"now accepts Bitcoin · We dey collect Bitcoin"' },
+            { key: 'en', title: 'English only', sub: '"Accept Bitcoin · Scan to pay"' },
+            { key: 'en-ha', title: 'English + Hausa', sub: '"Accept Bitcoin · Muna karbar Bitcoin"' },
+            { key: 'en-yo', title: 'English + Yoruba', sub: '"Accept Bitcoin · A gba Bitcoin"' },
+            { key: 'en-ig', title: 'English + Igbo', sub: '"Accept Bitcoin · Anyị na-anabata Bitcoin"' },
+            { key: 'en-pc', title: 'English + Pidgin', sub: '"Accept Bitcoin · We dey collect Bitcoin"' },
+          ].map(o => (
+            <button
+              key={o.key}
+              onClick={() => {
+                setBannerLang(o.key)
+                setPhase('upload')
+              }}
+              style={{
+                padding: '14px 16px',
+                borderRadius: 14,
+                border: `1px solid ${B.navyB}`,
+                background: B.navyL,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                textAlign: 'left',
+                width: '100%',
+              }}
+            >
+              <div style={{ fontSize: 14, fontWeight: 700, color: B.white, marginBottom: 3 }}>{o.title}</div>
+              <div style={{ fontSize: 11.5, color: B.dim }}>{o.sub}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'location') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('category')} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white }}>Where is your shop located?</div>
+          <div style={{ fontSize: 13, color: B.mid }}>This helps customers find you on BTCMap.</div>
+          <input
+            value={shopLocation}
+            onChange={e => setShopLocation(e.target.value)}
+            placeholder="e.g. Wuse Market, Abuja"
+            style={{ padding: '14px 16px', background: B.navy, border: `1px solid ${B.navyB}`, borderRadius: 14, fontSize: 14, color: B.white, fontFamily: 'inherit', outline: 'none' }}
+          />
+          <button
+            onClick={() => setPhase('lang')}
+            style={{
+              padding: 14,
+              borderRadius: 14,
+              border: 'none',
+              background: shopLocation.trim() ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
+              color: shopLocation.trim() ? '#0D1A1A' : B.dim,
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: shopLocation.trim() ? 'pointer' : 'default',
+              fontFamily: 'inherit',
+            }}
+          >
+            Continue
+          </button>
+          <button
+            onClick={() => setPhase('lang')}
+            style={{ background: 'transparent', border: 'none', color: B.dim, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}
+          >
+            Skip — continue without location
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'category') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('name')} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white }}>What type of business is this?</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {BUSINESS_CATEGORIES.map(c => (
+              <button key={c.id} className={`cat-btn${shopCategory === c.id ? ' selected' : ''}`} onClick={() => setShopCategory(c.id)}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{c.emoji}</div>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: B.white, lineHeight: 1.3 }}>{c.label}</div>
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setPhase('location')}
+            disabled={!shopCategory}
+            style={{
+              padding: 14,
+              borderRadius: 14,
+              border: 'none',
+              background: shopCategory ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
+              color: shopCategory ? '#0D1A1A' : B.dim,
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: shopCategory ? 'pointer' : 'default',
+              fontFamily: 'inherit',
+              marginTop: 4,
+            }}
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'name') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={onBack} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white }}>What is your shop or business name?</div>
+          <input
+            value={shopName}
+            onChange={e => setShopName(e.target.value)}
+            placeholder="e.g. Fatima's Fashion, Musa Suya Joint…"
+            style={{ padding: '14px 16px', background: B.navy, border: `1px solid ${B.navyB}`, borderRadius: 14, fontSize: 14, color: B.white, fontFamily: 'inherit', outline: 'none' }}
+          />
+          <button
+            onClick={() => setPhase('category')}
+            style={{
+              padding: 14,
+              borderRadius: 14,
+              border: 'none',
+              background: shopName.trim() ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
+              color: shopName.trim() ? '#0D1A1A' : B.dim,
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: shopName.trim() ? 'pointer' : 'default',
+              fontFamily: 'inherit',
+            }}
+          >
+            Continue
+          </button>
+          <button
+            onClick={() => setPhase('category')}
+            style={{ background: 'transparent', border: 'none', color: B.dim, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}
+          >
+            Skip — continue without name
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'join') {
+    return <JoinCommunityScreen community={community} onDone={() => { setPhase('steps'); setStep(p => p + 1) }} onBack={() => setPhase('steps')} titleColor={B.teal} title="Merchant Setup" />
+  }
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={onBack} />
+      <Progress step={step} total={MERCHANT_STEPS.length} color={B.teal} />
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 40px' }}>
+        <StepCard step={currentStep} feedback={feedback} titleColor={B.teal} onYes={handleYes} onNo={handleNo} onSkip={() => setStep(p => p + 1)} />
+        <div style={{ fontSize: 11, color: B.dim, textAlign: 'center', marginTop: 16 }}>Bitcoin Abuja · Powered by Fedi</div>
+      </div>
+    </div>
+  )
+}
+
+function MemberOnboarding({ onBack, community }) {
+  const [phase, setPhase] = useState('choice')
+  const [learnStep, setLearnStep] = useState(0)
+  const [step, setStep] = useState(0)
+  const [feedback, setFeedback] = useState(null)
+  const [contextType, setContextType] = useState(null)
+
+  const currentStep = MEMBER_STEPS[Math.min(step, MEMBER_STEPS.length - 1)]
+
+  const handleYes = () => {
+    setFeedback('yes')
+    setTimeout(() => {
+      setFeedback(null)
+      if (step === MEMBER_STEPS.length - 1) {
+        logOnboarding('member', null, null, null, community.id)
+        setPhase('done')
+      } else {
+        setStep(p => p + 1)
+      }
+    }, 900)
+  }
+
+  const handleNo = action => {
+    if (action === 'reset') {
+      setFeedback(null)
+      return
+    }
+    if (currentStep?.joinScreen) {
+      setPhase('join')
+      return
+    }
+    setFeedback('no')
+  }
+
+  if (phase === 'sharecard') return <ShareCard type="member" community={community} onClose={onBack} />
+
+  if (phase === 'done') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Welcome" titleColor={B.orange} onBack={onBack} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="done-pop" style={{ background: B.navyL, border: `1px solid ${B.orangeB}`, borderRadius: 20, padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center' }}>
+            <div style={{ fontSize: 52 }}>₿</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: B.orange, lineHeight: 1.3 }}>Welcome to {community.name}!</div>
+            <div style={{ fontSize: 13, color: B.mid, lineHeight: 1.65, maxWidth: 280 }}>You are now part of a real Bitcoin circular economy in Nigeria. Your sats are yours — no bank, no middleman.</div>
+          </div>
+
+          <div style={{ background: B.navy, border: '1px solid rgba(212,168,67,.2)', borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: 11, color: B.gold, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>🎁 100 Free Sats Waiting</div>
+            <div style={{ fontSize: 13.5, color: B.white, lineHeight: 1.6 }}>
+              The {community.name} Sats Faucet has 100 free sats for new members. This is your first real Bitcoin — proof of ownership. Stack more via Cashwyre when you are ready.
+            </div>
+            <button
+              className="action-cta"
+              onClick={() => window.open(community.faucetLink, '_blank')}
+              style={{
+                width: '100%',
+                padding: 13,
+                borderRadius: 12,
+                border: 'none',
+                background: `linear-gradient(135deg,${B.gold},${B.goldD})`,
+                color: '#0D0A00',
+                fontWeight: 800,
+                fontSize: 14,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                boxShadow: '0 3px 12px rgba(212,168,67,.35)',
+              }}
+            >
+              Claim My 100 Free Sats →
+            </button>
+          </div>
+
+          <button
+            className="action-cta"
+            onClick={() => setPhase('sharecard')}
+            style={{
+              width: '100%',
+              padding: 14,
+              borderRadius: 14,
+              border: 'none',
+              background: `linear-gradient(135deg,${B.orange},#c2610f)`,
+              color: 'white',
+              fontWeight: 800,
+              fontSize: 14,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              boxShadow: '0 3px 16px rgba(249,115,22,.3)',
+            }}
+          >
+            Share Your Bitcoin Card ✦
+          </button>
+
+          <button
+            onClick={onBack}
+            style={{
+              width: '100%',
+              padding: 12,
+              borderRadius: 14,
+              border: `1px solid ${B.navyB}`,
+              background: 'transparent',
+              color: B.mid,
+              fontSize: 13,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Back to Sabi AI
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'join') {
+    return <JoinCommunityScreen community={community} onDone={() => { setPhase('steps'); setStep(p => p + 1) }} onBack={() => setPhase('steps')} titleColor={B.orange} title="New Member Setup" />
+  }
+
+  if (phase === 'context') {
+    const cards = CONTEXT_CARDS[contextType] || []
+    return (
+      <ContextCarousel
+        cards={cards}
+        title={contextType === 'savings' ? 'Why Bitcoin?' : 'Why Lightning?'}
+        titleColor={B.orange}
+        onBack={() => setPhase('choice')}
+        onDone={() => {
+          setPhase('steps')
+          setStep(0)
+        }}
+      />
+    )
+  }
+
+  if (phase === 'learn') {
+    const card = LEARN_CARDS[learnStep]
+    const isLast = learnStep === LEARN_CARDS.length - 1
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Bitcoin Basics" titleColor={B.purple} onBack={() => (learnStep > 0 ? setLearnStep(p => p - 1) : setPhase('choice'))} />
+        <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', margin: '10px 16px 0', borderRadius: 3, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${((learnStep + 1) / LEARN_CARDS.length) * 100}%`, background: `linear-gradient(90deg,${B.purple},${B.teal})`, borderRadius: 3, transition: 'width 0.5s' }} />
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="card-slide" key={learnStep} style={{ background: B.navyL, border: `1px solid ${B.purpleB}`, borderRadius: 20, padding: 22, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ fontSize: 36 }}>{card.icon}</div>
+            <div style={{ fontSize: 17, fontWeight: 900, color: B.white, lineHeight: 1.3 }}>{card.title}</div>
+            <div style={{ fontSize: 13.5, color: B.mid, lineHeight: 1.75 }}>{card.body}</div>
+            <div style={{ background: B.purpleF, border: `1px solid ${B.purpleB}`, borderRadius: 12, padding: '13px 15px', fontSize: 13, color: B.purple, lineHeight: 1.6 }}>
+              {card.highlight}
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 11, color: B.dim }}>
+              {learnStep + 1} of {LEARN_CARDS.length}
+            </span>
+            <div style={{ display: 'flex', gap: 5 }}>
+              {LEARN_CARDS.map((_, i) => (
+                <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: i === learnStep ? B.purple : 'rgba(255,255,255,0.12)', transition: 'background 0.3s' }} />
+              ))}
+            </div>
+          </div>
+          {isLast ? (
+            <button
+              className="action-cta"
+              onClick={() => {
+                setPhase('steps')
+                setStep(0)
+              }}
+              style={{
+                width: '100%',
+                padding: 14,
+                borderRadius: 14,
+                border: 'none',
+                background: `linear-gradient(135deg,${B.orange},#c2610f)`,
+                color: 'white',
+                fontWeight: 800,
+                fontSize: 15,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                boxShadow: '0 3px 16px rgba(249,115,22,.3)',
+              }}
+            >
+              I'm ready — set up my wallet →
+            </button>
+          ) : (
+            <button
+              className="action-cta"
+              onClick={() => setLearnStep(p => p + 1)}
+              style={{
+                width: '100%',
+                padding: 14,
+                borderRadius: 14,
+                border: 'none',
+                background: `linear-gradient(135deg,${B.purple},#7c3aed)`,
+                color: 'white',
+                fontWeight: 800,
+                fontSize: 15,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                boxShadow: '0 3px 16px rgba(167,139,250,.3)',
+              }}
+            >
+              Next →
+            </button>
+          )}
+          <div style={{ fontSize: 11, color: B.dim, textAlign: 'center' }}>Bitcoin Abuja · Powered by Fedi</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'steps') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="New Member Setup" titleColor={B.orange} onBack={() => (step > 0 ? setStep(p => p - 1) : setPhase('choice'))} />
+        <Progress step={step} total={MEMBER_STEPS.length} color={B.orange} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 40px' }}>
+          <StepCard step={currentStep} feedback={feedback} titleColor={B.orange} onYes={handleYes} onNo={handleNo} onSkip={() => setStep(p => p + 1)} />
+          <div style={{ fontSize: 11, color: B.dim, textAlign: 'center', marginTop: 16 }}>Bitcoin Abuja · Powered by Fedi</div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <SubHeader title="New Member Setup" titleColor={B.orange} onBack={onBack} />
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ fontSize: 16, fontWeight: 900, color: B.white, lineHeight: 1.4, marginBottom: 4 }}>What brings you to {community.name}?</div>
+        <div style={{ fontSize: 13, color: B.mid, lineHeight: 1.6, marginBottom: 8 }}>
+          Choose what matters most to you. We will show you exactly why Bitcoin is the right tool — then get you set up.
+        </div>
+
+        {[
+          { icon: '📉', label: 'Protect my savings from Naira inflation', sub: 'See how Bitcoin protects your money — with real numbers', type: 'savings', color: B.gold },
+          { icon: '⚡', label: 'Send money without bank fees', sub: 'See how much you can save on every transfer', type: 'remittance', color: B.teal },
+          { icon: '📚', label: 'Learn about Bitcoin first', sub: '5 short cards covering everything you need to know', type: 'learn', color: B.purple },
+          { icon: '🚀', label: 'I know Bitcoin — just set me up', sub: 'Skip straight to wallet setup', type: 'skip', color: B.orange },
+        ].map((c, i) => (
+          <button
+            key={i}
+            className="choice-btn"
+            onClick={() => {
+              if (c.type === 'learn') setPhase('learn')
+              else if (c.type === 'skip') {
+                setPhase('steps')
+                setStep(0)
+              } else {
+                setContextType(c.type)
+                setPhase('context')
+              }
+            }}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: 16,
+              border: `1px solid ${c.color}33`,
+              background: `${c.color}08`,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              textAlign: 'left',
+              display: 'flex',
+              gap: 14,
+              alignItems: 'flex-start',
+            }}
+          >
+            <div style={{ fontSize: 26, flexShrink: 0, marginTop: 2 }}>{c.icon}</div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: B.white, lineHeight: 1.3, marginBottom: 4 }}>{c.label}</div>
+              <div style={{ fontSize: 11.5, color: B.mid, lineHeight: 1.4 }}>{c.sub}</div>
+            </div>
+          </button>
+        ))}
+
+        <div style={{ fontSize: 11, color: B.dim, textAlign: 'center', marginTop: 4 }}>Bitcoin Abuja · Powered by Fedi</div>
+      </div>
+    </div>
+  )
+}
+
+export default function App() {
+  const communityId = getCommunityFromURL()
+  const community = COMMUNITIES[communityId] || COMMUNITIES['bitcoin-abuja']
+
+  const [splashDone, setSplashDone] = useState(false)
+  const [btc, setBtc] = useState({ usd: 96300, ngn: 154000000 })
+  const [messages, setMessages] = useState([])
+  const [displayMsgs, setDisplayMsgs] = useState([])
+  const [inputText, setInputText] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [attachedFile, setAttachedFile] = useState(null)
+  const [activeLang, setActiveLang] = useState('en')
+  const [isRecording, setIsRecording] = useState(false)
+  const [voiceSupported, setVS] = useState(false)
+  const [micError, setMicError] = useState('')
+  const [mode, setMode] = useState('home')
+
+  const messagesEndRef = useRef(null)
+  const fileInputRef = useRef(null)
+  const mediaRecorderRef = useRef(null)
+  const mediaChunksRef = useRef([])
+  const audioPlayerRef = useRef(null)
+
+  const satNgn = btc ? (btc.ngn / 100000000).toFixed(2) : '1.54'
+  const btcFull = btc ? (btc.ngn / 1000000).toFixed(0) : '154'
+  const welcome = WELCOME_BY_LANG[activeLang] || WELCOME_BY_LANG.en
+  const prompts = PROMPTS_BY_LANG[activeLang] || PROMPTS_BY_LANG.en
+
+  useEffect(() => {
+    fetchBTC().then(setBtc)
+    const iv = setInterval(() => fetchBTC().then(setBtc), 180000)
+    if (window.MediaRecorder) setVS(true)
+    return () => clearInterval(iv)
+  }, [])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [displayMsgs, isLoading])
+
+  const stopSpeaking = () => {
+    window.speechSynthesis?.cancel()
+
+    if (audioPlayerRef.current) {
+      try {
+        audioPlayerRef.current.pause()
+        audioPlayerRef.current.currentTime = 0
+        if (audioPlayerRef.current.__objectUrl) URL.revokeObjectURL(audioPlayerRef.current.__objectUrl)
+      } catch (e) {}
+      audioPlayerRef.current = null
+    }
+
+    setIsSpeaking(false)
+  }
+
+  const playAssistantAudio = useCallback(async audioBase64 => {
+    if (!audioBase64) return false
+
+    try {
+      stopSpeaking()
+      const audio = createAudioFromBase64(audioBase64)
+      if (!audio) return false
+
+      audioPlayerRef.current = audio
+      setIsSpeaking(true)
+
+      audio.onended = () => {
+        setIsSpeaking(false)
+        if (audio.__objectUrl) URL.revokeObjectURL(audio.__objectUrl)
+        if (audioPlayerRef.current === audio) audioPlayerRef.current = null
+      }
+
+      audio.onerror = () => {
+        setIsSpeaking(false)
+        if (audio.__objectUrl) URL.revokeObjectURL(audio.__objectUrl)
+        if (audioPlayerRef.current === audio) audioPlayerRef.current = null
+      }
+
+      await audio.play()
+      return true
+    } catch (e) {
+      setIsSpeaking(false)
+      return false
+    }
+  }, [])
+
+  const startRecording = useCallback(async () => {
+    if (!window.MediaRecorder || !navigator.mediaDevices?.getUserMedia) {
+      setMicError('Voice recording is not supported on this browser.')
+      return
+    }
+
+    setMicError('')
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+
+      mediaRecorderRef.current = recorder
+      mediaChunksRef.current = []
+
+      recorder.ondataavailable = e => {
+        if (e.data && e.data.size > 0) mediaChunksRef.current.push(e.data)
+      }
+
+      recorder.onstop = async () => {
+        setIsRecording(false)
+        stream.getTracks().forEach(track => track.stop())
+
+        try {
+          const blob = new Blob(mediaChunksRef.current, { type: recorder.mimeType || 'audio/webm' })
+          if (!blob.size) {
+            setMicError('No audio detected. Try again.')
+            return
+          }
+
+          setMicError('Transcribing...')
+          const text = await transcribeAudioBlob(blob)
+          if (text.trim()) {
+            setInputText(text.trim())
+            setMicError('')
+          } else {
+            setMicError('No speech detected. Try again.')
+          }
+        } catch (err) {
+          setMicError('Transcription failed. Please type instead.')
+        }
+      }
+
+      recorder.start()
+      setIsRecording(true)
+    } catch (err) {
+      setMicError('Microphone access denied or blocked.')
+    }
+  }, [])
+
+  const stopRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current
+    if (recorder && recorder.state !== 'inactive') recorder.stop()
+    else setIsRecording(false)
+  }, [])
+
+  const toggleMic = useCallback(() => {
+    if (isRecording) stopRecording()
+    else startRecording()
+  }, [isRecording, startRecording, stopRecording])
+
+  const handleFileChange = async e => {
+    const file = e.target.files[0]
+    if (!file) return
+    const isImage = file.type.startsWith('image/')
+    const isPDF = file.type === 'application/pdf'
+    if (!isImage && !isPDF) return
+    const base64 = await fileToBase64(file)
+    const previewUrl = isImage ? URL.createObjectURL(file) : null
+    setAttachedFile({ type: isImage ? 'image' : 'pdf', base64, mediaType: file.type, name: file.name, previewUrl })
+    e.target.value = ''
+  }
+
+  const resetHome = () => {
+    stopSpeaking()
+    setMessages([])
+    setDisplayMsgs([])
+    setInputText('')
+    setAttachedFile(null)
+    setMicError('')
+    setIsLoading(false)
+    setMode('home')
+  }
+
+  const sendMessage = async textOverride => {
+    const text = (textOverride || inputText).trim()
+    if (text === '__MERCHANT__') {
+      setMode('merchant')
+      return
+    }
+    if (text === '__MEMBER__') {
+      setMode('member')
+      return
+    }
+
+    const file = attachedFile
+    if (!text && !file) return
+    if (isLoading) return
+
+    if (messages.length === 0 && text) {
+      const d = detectLang(text)
+      if (d !== 'en') setActiveLang(d)
+    }
+
+    setMode('chat')
+    setInputText('')
+    setAttachedFile(null)
+    setMicError('')
+    setDisplayMsgs(p => [...p, { r: 'user', c: text, file }])
+
+    const parts = []
+    if (file) {
+      if (file.type === 'image') parts.push({ type: 'image', source: { type: 'base64', media_type: file.mediaType, data: file.base64 } })
+      else parts.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: file.base64 } })
+    }
+    parts.push({ type: 'text', text: text || 'Please look at this and help me understand it.' })
+
+    const newHistory = [...messages, { role: 'user', content: parts }]
+    setMessages(newHistory)
+    setIsLoading(true)
+
+    try {
+      const { text: reply, audio } = await sendToAI(newHistory, btc, activeLang, community)
+      logConversation(activeLang, community.id)
+      setMessages(p => [...p, { role: 'assistant', content: [{ type: 'text', text: reply }] }])
+      setDisplayMsgs(p => [...p, { r: 'bot', c: reply, audio }])
+
+      if (audio) {
+        await playAssistantAudio(audio)
+      } else if (activeLang !== 'en' && activeLang !== 'pc') {
+        setIsSpeaking(true)
+        speakDevice(reply, activeLang)
+        const chk = setInterval(() => {
+          if (!window.speechSynthesis?.speaking) {
+            setIsSpeaking(false)
+            clearInterval(chk)
+          }
+        }, 300)
+      }
+    } catch (err) {
+      const errMsg = ERROR_BY_LANG[activeLang] || ERROR_BY_LANG.en
+      setDisplayMsgs(p => [...p, { r: 'error', c: errMsg }])
+      setMessages(p => [...p, { role: 'assistant', content: [{ type: 'text', text: errMsg }] }])
+    }
+
+    setIsLoading(false)
+  }
+
+  const handleKeyDown = e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
+  }
+
+  const hasMessages = displayMsgs.length > 0
+  const langLabels = { en: 'EN', ha: 'HA', yo: 'YO', ig: 'IG', pc: 'PID' }
+
+  const wrap = children => (
+    <div style={{ background: B.navy, minHeight: '100dvh', maxWidth: 440, margin: '0 auto', fontFamily: "'Satoshi',-apple-system,sans-serif", color: B.white, display: 'flex', flexDirection: 'column' }}>
+      <style>{CSS}</style>
+      {children}
+    </div>
+  )
+
+  if (mode === 'merchant') return wrap(<MerchantOnboarding onBack={() => setMode('home')} community={community} />)
+  if (mode === 'member') return wrap(<MemberOnboarding onBack={() => setMode('home')} community={community} />)
+  if (mode === 'request') return wrap(<CommunityRequestForm onBack={() => setMode('home')} />)
+  if (mode === 'stats') return wrap(<StatsView onBack={() => setMode('home')} communityId={community.id} />)
+
+  return wrap(
+    <>
+      {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
+      <div className={splashDone ? 'chat-in' : ''} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <div style={{ padding: '12px 14px', background: B.navyL, borderBottom: `1px solid ${B.navyB}`, display: 'flex', alignItems: 'center', gap: 10, position: 'sticky', top: 0, zIndex: 10 }}>
+          {(hasMessages || isLoading) ? (
+            <button
+              onClick={resetHome}
+              style={{
+                border: `1px solid ${B.goldB}`,
+                background: B.goldF,
+                color: B.gold,
+                borderRadius: 999,
+                padding: '7px 12px',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              ← Home
+            </button>
+          ) : (
+            <div style={{ width: 54 }} />
+          )}
+
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+            <img src={community.appLogo} alt="Sabi AI" style={{ height: 34, width: 'auto', objectFit: 'contain' }} />
+          </div>
+
+          <button
+            onClick={() => setMode('stats')}
+            style={{
+              fontSize: 11,
+              color: B.white,
+              background: `linear-gradient(135deg,${B.gold},${B.goldD})`,
+              border: 'none',
+              borderRadius: 999,
+              padding: '8px 12px',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontWeight: 800,
+              boxShadow: '0 3px 16px rgba(212,168,67,.25)',
+            }}
+          >
+            Stats
+          </button>
+        </div>
+
+        {!hasMessages && !isLoading && (
+          <div style={{ padding: '14px 16px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setMode('request')}
+                style={{
+                  flex: 1,
+                  padding: '11px 12px',
+                  borderRadius: 14,
+                  border: `1px solid ${B.goldB}`,
+                  background: B.goldF,
+                  color: B.gold,
+                  fontFamily: 'inherit',
+                  fontSize: 12.5,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                Bring Sabi to your community
+              </button>
+              <button
+                onClick={() => setMode('stats')}
+                style={{
+                  flex: 1,
+                  padding: '11px 12px',
+                  borderRadius: 14,
+                  border: `1px solid ${B.tealB}`,
+                  background: B.tealF,
+                  color: B.teal,
+                  fontFamily: 'inherit',
+                  fontSize: 12.5,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                View stats
+              </button>
+            </div>
+
+            <div style={{ background: `linear-gradient(180deg, ${B.navyL}, ${B.navy})`, border: `1px solid ${B.navyB}`, borderRadius: 20, padding: 18 }}>
+              <div style={{ fontSize: 24, fontWeight: 900, color: B.white, lineHeight: 1.2, marginBottom: 8 }}>{welcome.greeting}</div>
+              <div style={{ fontSize: 14, color: B.mid, lineHeight: 1.7, marginBottom: 10 }}>{welcome.sub}</div>
+              <div style={{ fontSize: 11, color: B.dim, letterSpacing: 0.3 }}>{welcome.langs}</div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: B.white, letterSpacing: 0.5, textTransform: 'uppercase' }}>Ask Sabi</div>
+              <div style={{ fontSize: 11, color: B.dim }}>Quick questions</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {prompts.slice(0, 2).map((p, i) => (
+                <button
+                  key={i}
+                  onClick={() => sendMessage(p.msg)}
+                  className="prompt-card"
+                  style={{
+                    background: B.navyL,
+                    border: `1px solid ${B.navyB}`,
+                    borderRadius: 16,
+                    padding: '14px 14px 16px',
+                    textAlign: 'left',
+                    boxShadow: '0 2px 12px rgba(0,0,0,.25)',
+                    fontFamily: 'inherit',
+                    minHeight: 98,
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: i === 0 ? B.gold : B.teal, boxShadow: `0 0 0 3px ${i === 0 ? B.goldF : B.tealF}` }} />
+                    <div style={{ fontSize: 10, color: B.dim, fontWeight: 700 }}>Chat</div>
+                  </div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: B.white, lineHeight: 1.4 }}>{p.label}</div>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+              <div style={{ fontSize: 12, fontWeight: 800, color: B.white, letterSpacing: 0.5, textTransform: 'uppercase' }}>Start using Bitcoin</div>
+              <div style={{ fontSize: 11, color: B.dim }}>Guided flows</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {prompts.slice(2).map((p, i) => {
+                const isMer = p.msg === '__MERCHANT__'
+                const isMem = p.msg === '__MEMBER__'
+                const accent = isMer ? B.teal : B.orange
+                return (
+                  <button
+                    key={i}
+                    onClick={() => sendMessage(p.msg)}
+                    className="prompt-card"
+                    style={{
+                      background: `linear-gradient(180deg, ${B.navyL}, ${B.navy})`,
+                      border: `1px solid ${accent}33`,
+                      borderRadius: 18,
+                      padding: '16px',
+                      textAlign: 'left',
+                      boxShadow: '0 2px 12px rgba(0,0,0,.25)',
+                      fontFamily: 'inherit',
+                      display: 'flex',
+                      gap: 14,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div style={{ width: 48, height: 48, borderRadius: 14, background: `${accent}18`, border: `1px solid ${accent}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+                      {isMer ? '🏪' : '📚'}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: B.white, lineHeight: 1.3, marginBottom: 4 }}>{p.label}</div>
+                      <div style={{ fontSize: 11.5, color: B.mid, lineHeight: 1.4 }}>
+                        {isMer ? 'Create a payment QR and print-ready merchant sign.' : 'Learn Bitcoin basics and finish wallet setup.'}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 18, color: accent, flexShrink: 0 }}>→</div>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '12px 14px', background: B.navyL, border: `1px solid ${B.goldB}`, borderRadius: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <button
+                  className={`mic-btn${isRecording ? ' recording' : ''}`}
+                  onClick={toggleMic}
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    border: `2px solid ${B.gold}`,
+                    background: isRecording ? `linear-gradient(135deg,${B.gold},${B.goldD})` : `linear-gradient(180deg, ${B.navyLL}, ${B.navy})`,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    color: isRecording ? '#0D0A00' : B.gold,
+                    boxShadow: isRecording ? '0 3px 16px rgba(212,168,67,.45)' : '0 0 0 3px rgba(212,168,67,.08)',
+                  }}
+                >
+                  <Icons.Mic />
+                </button>
+                <div>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: B.white }}>Speak to Sabi</div>
+                  <div style={{ fontSize: 11, color: B.dim }}>English, Hausa, Yoruba, Igbo, Pidgin</div>
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: B.gold, fontWeight: 700 }}>Voice on</div>
+            </div>
+
+            {voiceSupported && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, color: B.dim, fontSize: 11, marginBottom: 6 }}>
+                <span>1 sat ≈ ₦{satNgn}</span>
+                <span>•</span>
+                <span>1 BTC ≈ ${btc?.usd?.toLocaleString?.() || '96,300'} / ₦{btcFull}M</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          {hasMessages && (
+            <div style={{ padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {displayMsgs.map((msg, i) => (
+                <div key={i} className={msg.r === 'user' ? 'msg-user' : 'msg-bot'} style={{ display: 'flex', justifyContent: msg.r === 'user' ? 'flex-end' : 'flex-start', alignItems: 'flex-start', gap: 9 }}>
+                  {msg.r !== 'user' && <img src={community.appLogo} alt="Sabi" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0, marginTop: 2 }} />}
+                  <div style={{ maxWidth: '80%', display: 'flex', flexDirection: 'column', alignItems: msg.r === 'user' ? 'flex-end' : 'flex-start', gap: 6 }}>
+                    {msg.r === 'error' ? (
+                      <div className="error-bubble">{msg.c}</div>
+                    ) : (
+                      <div
+                        style={{
+                          padding: '12px 16px',
+                          fontSize: 14,
+                          lineHeight: 1.75,
+                          whiteSpace: 'pre-wrap',
+                          fontFamily: 'inherit',
+                          ...(msg.r === 'user'
+                            ? { background: `linear-gradient(135deg,${B.gold},${B.goldD})`, color: '#0D0A00', fontWeight: 700, borderRadius: '18px 18px 4px 18px', boxShadow: '0 3px 14px rgba(212,168,67,.3)' }
+                            : { background: B.navyL, color: B.white, borderRadius: '18px 18px 18px 4px', border: `1px solid ${B.navyB}` }),
+                        }}
+                      >
+                        {msg.file && (
+                          <div style={{ marginBottom: msg.c ? 8 : 0 }}>
+                            {msg.file.type === 'image' && msg.file.previewUrl ? (
+                              <img src={msg.file.previewUrl} alt="attachment" style={{ maxWidth: 200, maxHeight: 160, borderRadius: 10, display: 'block', objectFit: 'cover' }} />
+                            ) : (
+                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(212,168,67,.15)', border: '1px solid rgba(212,168,67,.3)', borderRadius: 8, padding: '5px 10px', fontSize: 11, color: B.gold }}>
+                                {msg.file.name}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {msg.c}
+                        {msg.r !== 'user' && msg.audio && (
+                          <button
+                            onClick={() => playAssistantAudio(msg.audio)}
+                            style={{
+                              marginTop: 10,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              background: 'rgba(45,212,191,.1)',
+                              border: `1px solid ${B.tealB}`,
+                              color: B.teal,
+                              borderRadius: 999,
+                              padding: '6px 10px',
+                              fontSize: 11,
+                              cursor: 'pointer',
+                              fontFamily: 'inherit',
+                            }}
+                          >
+                            <Icons.Speaker /> Listen
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {isLoading && (
+                <div className="msg-bot" style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
+                  <img src={community.appLogo} alt="Sabi" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ background: B.navyL, borderRadius: '18px 18px 18px 4px', padding: '14px 18px', border: `1px solid ${B.navyB}` }}>
+                    <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                      {[0, 1, 2].map(j => (
+                        <div key={j} style={{ width: 7, height: 7, borderRadius: '50%', background: B.gold, animation: `bounce 1.2s ${j * 0.15}s ease-in-out infinite` }} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
+
+        <div style={{ padding: '12px 16px 20px', background: B.navyL, borderTop: `1px solid ${B.navyB}`, position: 'sticky', bottom: 0 }}>
+          {isRecording && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px 12px', background: B.goldF, border: `1px solid ${B.goldB}`, borderRadius: 12 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: B.gold, animation: 'pulse 1s ease-in-out infinite' }} />
+              <span style={{ fontSize: 12, color: B.gold, fontWeight: 700 }}>{micError === 'Transcribing...' ? 'Transcribing...' : 'Listening… tap mic to stop'}</span>
+            </div>
+          )}
+          {micError && micError !== 'Transcribing...' && (
+            <div style={{ marginBottom: 8, padding: '8px 12px', background: B.redF, border: `1px solid ${B.redB}`, borderRadius: 12 }}>
+              <span style={{ fontSize: 12, color: B.red }}>{micError}</span>
+            </div>
+          )}
+          {attachedFile && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: B.navy, border: `1px solid ${B.navyB}`, borderRadius: 12, padding: '7px 10px', marginBottom: 8, maxWidth: 260 }}>
+              {attachedFile.type === 'image' && attachedFile.previewUrl ? (
+                <img src={attachedFile.previewUrl} alt="preview" style={{ width: 34, height: 34, borderRadius: 7, objectFit: 'cover', flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: 34, height: 34, borderRadius: 7, background: B.navyLL, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>📄</div>
+              )}
+              <span style={{ fontSize: 11.5, color: B.white, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{attachedFile.name}</span>
+              <button onClick={() => setAttachedFile(null)} style={{ width: 20, height: 20, borderRadius: '50%', background: B.navyLL, border: 'none', color: B.mid, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0 }}>
+                ✕
+              </button>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" onChange={handleFileChange} style={{ display: 'none' }} />
+            <button
+              className="attach-btn"
+              onClick={() => fileInputRef.current?.click()}
+              style={{ width: 40, height: 40, borderRadius: 12, background: attachedFile ? B.goldF : 'transparent', border: `1px solid ${attachedFile ? B.goldB : B.navyB}`, color: attachedFile ? B.gold : B.dim, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            >
+              <Icons.Attach />
+            </button>
+            <input
+              className="chat-input"
+              value={inputText}
+              onChange={e => setInputText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={isRecording ? 'Listening…' : attachedFile ? 'Add a question… (optional)' : 'Ask anything…'}
+              style={{ flex: 1, padding: '13px 18px', background: B.navy, border: `1px solid ${B.navyB}`, borderRadius: 28, fontSize: 14, color: B.white, fontFamily: 'inherit', transition: 'border-color 0.2s,box-shadow 0.2s' }}
+            />
+            {voiceSupported && !inputText.trim() && !attachedFile && (
+              <button
+                className={`mic-btn${isRecording ? ' recording' : ''}`}
+                onClick={toggleMic}
+                style={{ width: 46, height: 46, borderRadius: '50%', border: 'none', background: isRecording ? `linear-gradient(135deg,${B.gold},${B.goldD})` : B.navyLL, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: isRecording ? '#0D0A00' : B.gold, boxShadow: isRecording ? '0 3px 16px rgba(212,168,67,.5)' : '0 0 0 3px rgba(212,168,67,.08)' }}
+              >
+                <Icons.Mic />
+              </button>
+            )}
+            {(inputText.trim() || attachedFile) && (
+              <button
+                onClick={() => sendMessage()}
+                disabled={isLoading}
+                className="send-btn"
+                style={{ width: 46, height: 46, borderRadius: '50%', border: 'none', background: !isLoading ? `linear-gradient(135deg,${B.gold},${B.goldD})` : B.navyLL, cursor: !isLoading ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: !isLoading ? '0 3px 16px rgba(212,168,67,.4)' : 'none' }}
+              >
+                <Icons.Send color={!isLoading ? '#0D0A00' : B.dim} />
+              </button>
+            )}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 8 }}>
+            <div style={{ fontSize: 9, color: B.dim, letterSpacing: 0.8 }}>Bitcoin Abuja · Powered by Fedi</div>
+            <button onClick={() => setMode('request')} style={{ fontSize: 9, color: B.gold, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: 0.5, textDecoration: 'underline', fontWeight: 700 }}>
+              Bring Sabi to your community
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+            { key: 'en-pc', title: 'English + Pidgin', sub: '"Accept Bitcoin · We dey collect Bitcoin"' },
           ].map(o => (
             <button
               key={o.key}
@@ -2229,10 +3287,61 @@ function MemberOnboarding({ onBack, community }) {
   )
 }
 
+function HomeActionCard({ icon, title, sub, color, onClick, accent = 'soft' }) {
+  const bg = accent === 'strong' ? `${color}12` : `${color}08`
+  const border = accent === 'strong' ? `${color}55` : `${color}28`
+  return (
+    <button
+      onClick={onClick}
+      className="prompt-card"
+      style={{
+        width: '100%',
+        padding: accent === 'strong' ? '18px 16px' : '14px 14px',
+        borderRadius: 18,
+        border: `1px solid ${border}`,
+        background: bg,
+        textAlign: 'left',
+        display: 'flex',
+        gap: 14,
+        alignItems: 'flex-start',
+        boxShadow: accent === 'strong' ? '0 8px 26px rgba(0,0,0,.22)' : '0 4px 16px rgba(0,0,0,.18)',
+        fontFamily: 'inherit',
+      }}
+    >
+      <div
+        style={{
+          width: accent === 'strong' ? 44 : 36,
+          height: accent === 'strong' ? 44 : 36,
+          borderRadius: 14,
+          background: `linear-gradient(135deg, ${color}, ${color}cc)`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          color: color === B.teal ? '#0D1A1A' : '#0D0A00',
+          fontSize: accent === 'strong' ? 20 : 17,
+          boxShadow: `0 0 0 3px ${color}22`,
+        }}
+      >
+        {icon}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: accent === 'strong' ? 14.5 : 13.5, fontWeight: 800, color: B.white, lineHeight: 1.28, marginBottom: 4 }}>
+          {title}
+        </div>
+        <div style={{ fontSize: accent === 'strong' ? 11.5 : 11, color: B.mid, lineHeight: 1.45 }}>
+          {sub}
+        </div>
+      </div>
+    </button>
+  )
+}
+
 export default function App() {
   const communityId = getCommunityFromURL()
   const community = COMMUNITIES[communityId] || COMMUNITIES['bitcoin-abuja']
 
+  const [screen, setScreen] = useState('home')
   const [splashDone, setSplashDone] = useState(false)
   const [btc, setBtc] = useState({ usd: 96300, ngn: 154000000 })
   const [messages, setMessages] = useState([])
@@ -2249,12 +3358,12 @@ export default function App() {
 
   const messagesEndRef = useRef(null)
   const fileInputRef = useRef(null)
-  const recognitionRef = useRef(null)
   const mediaRecorderRef = useRef(null)
   const mediaChunksRef = useRef([])
   const audioPlayerRef = useRef(null)
 
   const satNgn = btc ? (btc.ngn / 100000000).toFixed(2) : '1.54'
+  const btcPrice = btc?.ngn ? (btc.ngn / 1000000).toFixed(0) : '154'
   const welcome = WELCOME_BY_LANG[activeLang] || WELCOME_BY_LANG.en
   const prompts = PROMPTS_BY_LANG[activeLang] || PROMPTS_BY_LANG.en
 
@@ -2269,7 +3378,7 @@ export default function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [displayMsgs, isLoading])
 
-  const stopSpeaking = () => {
+  const stopSpeaking = useCallback(() => {
     window.speechSynthesis?.cancel()
 
     if (audioPlayerRef.current) {
@@ -2282,7 +3391,7 @@ export default function App() {
     }
 
     setIsSpeaking(false)
-  }
+  }, [])
 
   const playAssistantAudio = useCallback(async audioBase64 => {
     if (!audioBase64) return false
@@ -2313,7 +3422,7 @@ export default function App() {
       setIsSpeaking(false)
       return false
     }
-  }, [])
+  }, [stopSpeaking])
 
   const startRecording = useCallback(async () => {
     if (!window.MediaRecorder || !navigator.mediaDevices?.getUserMedia) {
@@ -2391,6 +3500,19 @@ export default function App() {
     e.target.value = ''
   }
 
+  const resetChat = useCallback(() => {
+    stopSpeaking()
+    setMessages([])
+    setDisplayMsgs([])
+    setInputText('')
+    setAttachedFile(null)
+    setIsLoading(false)
+    setMicError('')
+    setIsRecording(false)
+    setScreen('home')
+    setMode('chat')
+  }, [stopSpeaking])
+
   const sendMessage = async textOverride => {
     const text = (textOverride || inputText).trim()
     if (text === '__MERCHANT__') {
@@ -2411,6 +3533,7 @@ export default function App() {
       if (d !== 'en') setActiveLang(d)
     }
 
+    setScreen('chat')
     setInputText('')
     setAttachedFile(null)
     setMicError('')
@@ -2435,15 +3558,19 @@ export default function App() {
 
       if (audio) {
         await playAssistantAudio(audio)
-      } else if (activeLang !== 'en' && activeLang !== 'pc') {
+      } else {
         setIsSpeaking(true)
-        speakDevice(reply, activeLang)
-        const chk = setInterval(() => {
-          if (!window.speechSynthesis?.speaking) {
-            setIsSpeaking(false)
-            clearInterval(chk)
-          }
-        }, 300)
+        const started = speakDevice(reply, activeLang)
+        if (started) {
+          const chk = setInterval(() => {
+            if (!window.speechSynthesis?.speaking) {
+              setIsSpeaking(false)
+              clearInterval(chk)
+            }
+          }, 300)
+        } else {
+          setIsSpeaking(false)
+        }
       }
     } catch (err) {
       const errMsg = ERROR_BY_LANG[activeLang] || ERROR_BY_LANG.en
@@ -2471,17 +3598,40 @@ export default function App() {
     </div>
   )
 
-  if (mode === 'merchant') return wrap(<MerchantOnboarding onBack={() => setMode('chat')} community={community} />)
-  if (mode === 'member') return wrap(<MemberOnboarding onBack={() => setMode('chat')} community={community} />)
+  if (mode === 'merchant') return wrap(<MerchantOnboarding onBack={resetChat} community={community} />)
+  if (mode === 'member') return wrap(<MemberOnboarding onBack={resetChat} community={community} />)
   if (mode === 'request') return wrap(<CommunityRequestForm onBack={() => setMode('chat')} />)
-  if (mode === 'stats') return wrap(<StatsView onBack={() => setMode('chat')} />)
+  if (mode === 'stats') return wrap(<StatsView onBack={() => setMode('chat')} communityId={community.id} />)
 
   return wrap(
     <>
       {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
       <div className={splashDone ? 'chat-in' : ''} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
         <div style={{ padding: '12px 16px', background: B.navyL, borderBottom: `1px solid ${B.navyB}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
-          <img src={community.appLogo} alt="Sabi AI" style={{ height: 34, width: 'auto', objectFit: 'contain' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {screen === 'chat' && (
+              <button
+                onClick={resetChat}
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 12,
+                  border: `1px solid ${B.goldB}`,
+                  background: `linear-gradient(135deg, ${B.goldF}, rgba(212,168,67,.02))`,
+                  color: B.gold,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 0 0 3px rgba(212,168,67,.08)',
+                }}
+              >
+                <Icons.Back />
+              </button>
+            )}
+            <img src={community.appLogo} alt="Sabi AI" style={{ height: 34, width: 'auto', objectFit: 'contain' }} />
+          </div>
+
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {isSpeaking && (
               <button
@@ -2494,81 +3644,194 @@ export default function App() {
             )}
             <button
               onClick={() => setMode('stats')}
-              style={{ fontSize: 10, color: B.dim, background: 'transparent', border: `1px solid ${B.dim}`, borderRadius: 8, padding: '4px 8px', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: 0.5 }}
+              style={{
+                fontSize: 10,
+                color: B.white,
+                background: 'rgba(212,168,67,.12)',
+                border: `1px solid ${B.goldB}`,
+                borderRadius: 10,
+                padding: '6px 10px',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                letterSpacing: 0.5,
+                fontWeight: 800,
+              }}
             >
               Stats
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: B.goldF, border: `1px solid ${B.goldB}`, borderRadius: 100, padding: '5px 13px' }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: B.green, animation: 'liveDot 2s ease infinite' }} />
-              <span style={{ fontSize: 11, fontWeight: 500, color: B.white }}>1 sat</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: B.gold }}>₦{satNgn}</span>
-            </div>
           </div>
         </div>
 
-        <div className="lang-bar">
-          {Object.entries(langLabels).map(([code, label]) => (
-            <button key={code} className={`lang-pill${activeLang === code ? ' active' : ''}`} onClick={() => setActiveLang(code)}>
-              {label}
-            </button>
-          ))}
+        <div style={{ padding: '10px 16px 12px', background: B.navyL, borderBottom: `1px solid ${B.navyB}`, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <button
+            onClick={() => setMode('request')}
+            style={{
+              padding: '12px 14px',
+              borderRadius: 16,
+              border: `1px solid ${B.tealB}`,
+              background: B.tealF,
+              color: B.teal,
+              cursor: 'pointer',
+              textAlign: 'left',
+              fontFamily: 'inherit',
+              boxShadow: '0 10px 24px rgba(0,0,0,.14)',
+            }}
+          >
+            <div style={{ fontSize: 12.5, fontWeight: 900, marginBottom: 3 }}>Bring Sabi to your community</div>
+            <div style={{ fontSize: 10.5, color: B.mid, lineHeight: 1.35 }}>Request deployment and follow-up.</div>
+          </button>
+
+          <button
+            onClick={() => setMode('stats')}
+            style={{
+              padding: '12px 14px',
+              borderRadius: 16,
+              border: `1px solid ${B.goldB}`,
+              background: B.goldF,
+              color: B.gold,
+              cursor: 'pointer',
+              textAlign: 'left',
+              fontFamily: 'inherit',
+              boxShadow: '0 10px 24px rgba(0,0,0,.14)',
+            }}
+          >
+            <div style={{ fontSize: 12.5, fontWeight: 900, marginBottom: 3 }}>Impact Dashboard</div>
+            <div style={{ fontSize: 10.5, color: B.mid, lineHeight: 1.35 }}>View growth and onboarding activity.</div>
+          </button>
+        </div>
+
+        <div style={{ padding: '10px 16px 0', background: B.navyL }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div style={{ fontSize: 11, color: B.mid, fontWeight: 700, letterSpacing: 0.7, textTransform: 'uppercase' }}>Language</div>
+            <div style={{ fontSize: 11, color: B.dim }}>Speak or type in your language</div>
+          </div>
+          <div className="lang-bar" style={{ padding: '0 0 10px', borderBottom: 'none', background: 'transparent' }}>
+            {Object.entries(langLabels).map(([code, label]) => (
+              <button key={code} className={`lang-pill${activeLang === code ? ' active' : ''}`} onClick={() => setActiveLang(code)}>
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-          {!hasMessages && !isLoading && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 20px 20px' }}>
-              <h1 className="w1" style={{ fontSize: 24, fontWeight: 900, color: B.white, textAlign: 'center', marginBottom: 10 }}>
-                {welcome.greeting}
-              </h1>
-              <p className="w2" style={{ fontSize: 14, color: B.mid, textAlign: 'center', lineHeight: 1.65, marginBottom: 6, maxWidth: 290 }}>
-                {welcome.sub}
-              </p>
-              <p className="w2" style={{ fontSize: 11, color: B.dim, textAlign: 'center', marginBottom: 4, letterSpacing: 0.4 }}>
-                {welcome.langs}
-              </p>
-              <p className="w2" style={{ fontSize: 11, color: B.dim, textAlign: 'center', marginBottom: 22 }}>
-                Joined by {community.memberCount} members across Nigeria
-              </p>
-              <div className="w3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%', maxWidth: 360 }}>
-                {prompts.map((p, i) => {
-                  const isMer = p.msg === '__MERCHANT__'
-                  const isMem = p.msg === '__MEMBER__'
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => sendMessage(p.msg)}
-                      className="prompt-card"
-                      style={{
-                        background: B.navyL,
-                        border: `1px solid ${isMer ? B.tealB : isMem ? B.orangeB : B.navyB}`,
-                        borderRadius: 16,
-                        padding: '16px 14px 14px',
-                        textAlign: 'left',
-                        boxShadow: '0 2px 12px rgba(0,0,0,.3)',
-                        fontFamily: 'inherit',
-                      }}
-                    >
-                      <div style={{ width: 20, height: 3, borderRadius: 2, background: isMer ? B.teal : isMem ? B.orange : i % 2 === 0 ? B.gold : B.goldD, marginBottom: 12 }} />
-                      <div style={{ fontSize: 13, fontWeight: 500, color: B.white, lineHeight: 1.4 }}>{p.label}</div>
-                    </button>
-                  )
-                })}
+          {screen === 'home' && !hasMessages && !isLoading && (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '22px 16px 18px', gap: 16 }}>
+              <div style={{ padding: '2px 2px 4px' }}>
+                <h1 className="w1" style={{ fontSize: 24, fontWeight: 900, color: B.white, marginBottom: 8, lineHeight: 1.15 }}>
+                  {welcome.greeting}
+                </h1>
+                <p className="w2" style={{ fontSize: 14, color: B.mid, lineHeight: 1.6, maxWidth: 320 }}>
+                  {welcome.sub}
+                </p>
               </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: B.navyL, border: `1px solid ${B.goldB}`, borderRadius: 20, padding: 14, boxShadow: '0 10px 30px rgba(0,0,0,.22)' }}>
+                <div
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: '50%',
+                    background: `linear-gradient(135deg, ${B.gold}, ${B.goldD})`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 0 5px rgba(212,168,67,.12), 0 0 0 1px rgba(212,168,67,.45) inset',
+                    flexShrink: 0,
+                    color: '#0D0A00',
+                    fontWeight: 900,
+                  }}
+                >
+                  ₿
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, color: B.mid, letterSpacing: 0.7, textTransform: 'uppercase', marginBottom: 4 }}>Bitcoin price context</div>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: B.white, lineHeight: 1.2 }}>1 BTC ≈ ₦{btcPrice}M</div>
+                  <div style={{ fontSize: 11.5, color: B.gold, marginTop: 4 }}>1 sat ≈ ₦{satNgn}</div>
+                </div>
+              </div>
+
+              <div className="w3" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ fontSize: 11, color: B.dim, letterSpacing: 0.7, textTransform: 'uppercase', fontWeight: 800 }}>Ask Sabi</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
+                  {prompts.slice(0, 2).map((p, i) => (
+                    <HomeActionCard
+                      key={i}
+                      icon={i === 0 ? '₿' : '⚡'}
+                      title={p.label}
+                      sub={i === 0 ? 'Get the market price and sat value.' : 'Ask how to buy Bitcoin with Naira.'}
+                      color={i === 0 ? B.gold : B.teal}
+                      onClick={() => {
+                        setScreen('chat')
+                        sendMessage(p.msg)
+                      }}
+                      accent="soft"
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="w4" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ fontSize: 11, color: B.dim, letterSpacing: 0.7, textTransform: 'uppercase', fontWeight: 800 }}>Start using Bitcoin</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
+                  <HomeActionCard
+                    icon="🏪"
+                    title="Accept Bitcoin at my shop"
+                    sub="Create a payment QR and print-ready signage."
+                    color={B.teal}
+                    onClick={() => setMode('merchant')}
+                    accent="strong"
+                  />
+                  <HomeActionCard
+                    icon="📚"
+                    title="New to Bitcoin? Start here"
+                    sub="A guided path that explains Bitcoin simply."
+                    color={B.orange}
+                    onClick={() => setMode('member')}
+                    accent="strong"
+                  />
+                </div>
+              </div>
+
               {voiceSupported && (
-                <div className="w4" style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 6, color: B.dim, fontSize: 11 }}>
-                  <Icons.Mic />
-                  <span>Speak into the mic — Sabi will transcribe you</span>
+                <div style={{ marginTop: 2, padding: '14px 14px 12px', background: B.navyL, border: `1px solid ${B.goldB}`, borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <button
+                    onClick={toggleMic}
+                    className={`mic-btn${isRecording ? ' recording' : ''}`}
+                    style={{
+                      width: 52,
+                      height: 52,
+                      borderRadius: '50%',
+                      border: `1px solid ${B.goldB}`,
+                      background: isRecording ? `linear-gradient(135deg,${B.gold},${B.goldD})` : `linear-gradient(135deg, rgba(212,168,67,.16), rgba(212,168,67,.06))`,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      color: isRecording ? '#0D0A00' : B.gold,
+                      boxShadow: isRecording ? '0 0 0 4px rgba(212,168,67,.12), 0 10px 24px rgba(0,0,0,.2)' : '0 8px 18px rgba(0,0,0,.18)',
+                    }}
+                  >
+                    <Icons.Mic />
+                  </button>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 800, color: B.white, marginBottom: 2 }}>Voice with Sabi</div>
+                    <div style={{ fontSize: 11.2, color: B.mid, lineHeight: 1.45 }}>
+                      Tap the mic and speak. Sabi will transcribe your question and answer in voice.
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           )}
 
-          {hasMessages && (
+          {screen === 'chat' && (
             <div style={{ padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               {displayMsgs.map((msg, i) => (
                 <div key={i} className={msg.r === 'user' ? 'msg-user' : 'msg-bot'} style={{ display: 'flex', justifyContent: msg.r === 'user' ? 'flex-end' : 'flex-start', alignItems: 'flex-start', gap: 9 }}>
                   {msg.r !== 'user' && <img src={community.appLogo} alt="Sabi" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0, marginTop: 2 }} />}
-                  <div style={{ maxWidth: '80%', display: 'flex', flexDirection: 'column', alignItems: msg.r === 'user' ? 'flex-end' : 'flex-start', gap: 5 }}>
+                  <div style={{ maxWidth: '84%', display: 'flex', flexDirection: 'column', alignItems: msg.r === 'user' ? 'flex-end' : 'flex-start', gap: 6 }}>
                     {msg.r === 'error' ? (
                       <div className="error-bubble">{msg.c}</div>
                     ) : (
@@ -2604,14 +3867,15 @@ export default function App() {
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: 6,
-                              background: 'rgba(45,212,191,.1)',
-                              border: `1px solid ${B.tealB}`,
-                              color: B.teal,
+                              background: 'rgba(212,168,67,.12)',
+                              border: `1px solid ${B.goldB}`,
+                              color: B.gold,
                               borderRadius: 999,
                               padding: '6px 10px',
                               fontSize: 11,
                               cursor: 'pointer',
                               fontFamily: 'inherit',
+                              fontWeight: 800,
                             }}
                           >
                             <Icons.Speaker /> Listen
@@ -2644,7 +3908,7 @@ export default function App() {
           {isRecording && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px 12px', background: B.goldF, border: `1px solid ${B.goldB}`, borderRadius: 12 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: B.gold, animation: 'pulse 1s ease-in-out infinite' }} />
-              <span style={{ fontSize: 12, color: B.gold, fontWeight: 600 }}>{micError === 'Transcribing...' ? 'Transcribing...' : 'Listening… tap mic to stop'}</span>
+              <span style={{ fontSize: 12, color: B.gold, fontWeight: 700 }}>{micError === 'Transcribing...' ? 'Transcribing...' : 'Listening… tap mic to stop'}</span>
             </div>
           )}
           {micError && micError !== 'Transcribing...' && (
@@ -2686,7 +3950,20 @@ export default function App() {
               <button
                 className={`mic-btn${isRecording ? ' recording' : ''}`}
                 onClick={toggleMic}
-                style={{ width: 46, height: 46, borderRadius: '50%', border: 'none', background: isRecording ? `linear-gradient(135deg,${B.gold},${B.goldD})` : B.navyLL, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: isRecording ? '#0D0A00' : B.mid, boxShadow: isRecording ? '0 3px 16px rgba(212,168,67,.5)' : 'none' }}
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: isRecording ? `linear-gradient(135deg,${B.gold},${B.goldD})` : B.navyLL,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  color: isRecording ? '#0D0A00' : B.mid,
+                  boxShadow: isRecording ? '0 3px 16px rgba(212,168,67,.5)' : 'none',
+                }}
               >
                 <Icons.Mic />
               </button>
@@ -2704,13 +3981,9 @@ export default function App() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 8 }}>
             <div style={{ fontSize: 9, color: B.dim, letterSpacing: 0.8 }}>Bitcoin Abuja · Powered by Fedi</div>
-            <button onClick={() => setMode('request')} style={{ fontSize: 9, color: B.dim, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: 0.5, textDecoration: 'underline' }}>
-              Bring Sabi to your community
-            </button>
           </div>
         </div>
       </div>
     </>
   )
 }
-
