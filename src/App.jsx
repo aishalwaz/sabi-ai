@@ -193,18 +193,15 @@ const MEMBER_STEPS = [
 ]
 async function sendToAI(history, btc, activeLang, community) {
   const satN = btc ? (btc.ngn/100000000).toFixed(2) : '1.54'
-  const kSat = btc ? Math.round(btc.ngn/100000).toLocaleString() : '1,540'
-  const tenK = btc ? Math.round(btc.ngn/10000).toLocaleString() : '15,400'
-  const hundK = btc ? Math.round(btc.ngn/1000).toLocaleString() : '154,000'
   const usd = btc ? btc.usd.toLocaleString() : '96,300'
   const ngnM = btc ? (btc.ngn/1000000).toFixed(0) : '154'
-  const system = `You are Sabi — the AI guide for ${community.name}, a Bitcoin circular economy community in ${community.city} built on the Fedi app. CRITICAL — LANGUAGE: Detect what language the user writes in and respond in THAT EXACT LANGUAGE. CRITICAL — FORMATTING: NEVER use asterisks or markdown. Plain text only. Numbers for lists. LIVE BITCOIN PRICES: 1 satoshi = ${satN} Naira. 1,000 sats = ${kSat} Naira. 1 Bitcoin = $${usd} = ${ngnM}M Naira. HOW TO BUY BITCOIN: Fedi — Mini Apps — Cashwyre — Crypto Onramp — NGN — enter amount — transfer from any Nigerian bank — wait 5 to 10 minutes. No ID required. HOW TO ACCEPT BITCOIN AT YOUR SHOP: Open Fedi — Wallet tab — Receive — display QR at counter — customer scans — payment instant — convert to Naira via Cashwyre anytime. ${community.name}: ${community.memberCount} members, ${community.merchantCount} merchants, ${community.city}. Led by Aisha Ummi Waziri. KEEP RESPONSES: Plain text. Warm and human. Always respond in the user's language.`
+  const system = 'You are Sabi — the AI Bitcoin guide for ' + community.name + ' in ' + community.city + ' on the Fedi app. LANGUAGE: Always respond in the same language the user writes in. FORMATTING: Never use asterisks or markdown. Plain text only. Numbers for lists. PRICES: 1 satoshi = ' + satN + ' Naira. 1 Bitcoin = $' + usd + ' = ' + ngnM + 'M Naira. TO BUY BITCOIN: Fedi — Mini Apps — Cashwyre — Crypto Onramp — NGN — transfer from any Nigerian bank — wait 5-10 minutes. No ID needed. TO ACCEPT BITCOIN AT SHOP: Fedi — Wallet tab — Receive — show QR to customer — they scan — instant payment — convert to Naira via Cashwyre anytime. COMMUNITY: ' + community.name + ' has ' + community.memberCount + ' members and ' + community.merchantCount + ' merchants. Led by Aisha Ummi Waziri. Always be warm, direct and human.'
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages: history, system, language: activeLang, tts: true })
   })
-  if (!response.ok) throw new Error(`API ${response.status}`)
+  if (!response.ok) throw new Error('API ' + response.status)
   const data = await response.json()
   if (data.error) throw new Error(data.error)
   return { text: data.content?.[0]?.text || '', audio: data.audio || null }
