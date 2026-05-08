@@ -192,59 +192,45 @@ const MEMBER_STEPS = [
   { ins:'Step 4 of 4 — Secure your wallet', q:'Have you written your wallet recovery words on paper?',                                                          yes:"You're all set. Let's finish.", no:'Open Fedi → Profile → Personal Backup → write every word on physical paper. Never screenshot. Come back when done.' },
 ]
 async function sendToAI(history, btc, activeLang, community) {
-  const satN  = btc ? (btc.ngn/100000000).toFixed(2) : '1.54'
-  const kSat  = btc ? Math.round(btc.ngn/100000).toLocaleString() : '1,540'
-  const tenK  = btc ? Math.round(btc.ngn/10000).toLocaleString() : '15,400'
+  const satN = btc ? (btc.ngn/100000000).toFixed(2) : '1.54'
+  const kSat = btc ? Math.round(btc.ngn/100000).toLocaleString() : '1,540'
+  const tenK = btc ? Math.round(btc.ngn/10000).toLocaleString() : '15,400'
   const hundK = btc ? Math.round(btc.ngn/1000).toLocaleString() : '154,000'
-  const usd   = btc ? btc.usd.toLocaleString() : '96,300'
-  const ngnM  = btc ? (btc.ngn/1000000).toFixed(0) : '154'
+  const usd = btc ? btc.usd.toLocaleString() : '96,300'
+  const ngnM = btc ? (btc.ngn/1000000).toFixed(0) : '154'
 
   const system = `You are Sabi — the AI guide for ${community.name}, a Bitcoin circular economy community in ${community.city} built on the Fedi app.
 
-CRITICAL — LANGUAGE: Detect what language the user writes in and respond in THAT EXACT LANGUAGE. Hausa → Hausa. Yoruba → Yoruba. Igbo → Igbo. Pidgin → Pidgin. English → English.
+CRITICAL — LANGUAGE: Detect what language the user writes in and respond in THAT EXACT LANGUAGE. Hausa to Hausa. Yoruba to Yoruba. Igbo to Igbo. Pidgin to Pidgin. English to English.
 
 CRITICAL — FORMATTING: NEVER use asterisks, markdown bold, italic, or any symbols. No ** no * no ##. Plain conversational text only. Use numbers like 1. 2. 3. for lists.
 
 PERSONALITY: Warm, direct, knowledgeable — like a trusted Bitcoin expert from Nigeria. Match depth to the question.
 
 LIVE BITCOIN PRICES:
-1 satoshi = ₦${satN}
-1,000 sats = ₦${kSat}
-10,000 sats = ₦${tenK}
-100,000 sats = ₦${hundK}
-1 Bitcoin = $${usd} = ₦${ngnM}M NGN
-
-FEDI MINI APPS:
-BTC Map — find Bitcoin merchants near you
-My First Bitcoin — free Bitcoin education
-Cashwyre — buy or sell Bitcoin with Naira, no ID needed
-LnESIM — buy phone credit with Bitcoin
-PayPerQ — AI chat, pay per prompt
-Sats Faucet — claim free 100 sats
-Sabi AI — that is me
+1 satoshi = ${satN} Naira
+1,000 sats = ${kSat} Naira
+10,000 sats = ${tenK} Naira
+100,000 sats = ${hundK} Naira
+1 Bitcoin = $${usd} = ${ngnM}M Naira
 
 HOW TO GET STARTED:
 1. Download Fedi from App Store or Google Play
 2. Tap Wallet tab — join any federation — creates your Bitcoin wallet
 3. Join ${community.name} community by scanning the QR code
-4. Back up recovery words — Profile → Personal Backup — write on paper
+4. Back up recovery words — Profile to Personal Backup — write on paper
 
 HOW TO BUY BITCOIN WITH NAIRA via Cashwyre:
-1. Fedi → Mini Apps → Cashwyre → Crypto Onramp → NGN
+1. Fedi — Mini Apps — Cashwyre — Crypto Onramp — NGN
 2. Enter amount (minimum 2,000 Naira)
 3. Transfer from any Nigerian bank
 4. Wait 5-10 minutes — sats appear. No ID required.
 
-HOW TO SELL BITCOIN FOR NAIRA:
-Fedi → Mini Apps → Cashwyre → Crypto Offramp → enter amount → enter bank details → Naira arrives in minutes.
-
 HOW TO ACCEPT BITCOIN AT YOUR SHOP:
-1. Open Fedi → Wallet tab → Receive
+1. Open Fedi — Wallet tab — Receive
 2. Display the QR code at your counter
-3. Customer scans → payment instant
+3. Customer scans — payment instant
 4. Convert to Naira via Cashwyre Offramp anytime
-
-ABOUT 100 SATS FAUCET: Free 100 sats for new members. Not for spending — proof of ownership. Stack more via Cashwyre. Do not tell people to spend their 100 sats.
 
 ${community.name.toUpperCase()}: ${community.memberCount} members, ${community.merchantCount} merchants, ${community.city}. Led by Aisha Ummi Waziri.
 
@@ -267,7 +253,7 @@ async function fetchStats() {
   const h = { apikey:SB_KEY, Authorization:`Bearer ${SB_KEY}` }
   const q = (table,params) => fetch(`${SB_URL}/rest/v1/${table}?${params}`,{headers:h}).then(r=>r.json())
   const monthStart = new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString()
-  const weekAgo    = new Date(Date.now()-7*24*60*60*1000).toISOString()
+  const weekAgo = new Date(Date.now()-7*24*60*60*1000).toISOString()
   const [allC,weekC,allM,weekM,langD,dailyD,merchants,requests] = await Promise.all([
     q('conversations',`select=id&created_at=gte.${monthStart}`),
     q('conversations',`select=id&created_at=gte.${weekAgo}`),
@@ -280,13 +266,13 @@ async function fetchStats() {
   ])
   return {
     totalConv: Array.isArray(allC)?allC.length:0,
-    weekConv:  Array.isArray(weekC)?weekC.length:0,
+    weekConv: Array.isArray(weekC)?weekC.length:0,
     totalMemb: Array.isArray(allM)?allM.length:0,
-    weekMemb:  Array.isArray(weekM)?weekM.length:0,
-    langData:  Array.isArray(langD)?langD:[],
+    weekMemb: Array.isArray(weekM)?weekM.length:0,
+    langData: Array.isArray(langD)?langD:[],
     dailyData: Array.isArray(dailyD)?dailyD:[],
     merchants: Array.isArray(merchants)?merchants.filter(m=>m.shop_name):[],
-    requests:  Array.isArray(requests)?requests:[],
+    requests: Array.isArray(requests)?requests:[],
   }
 }
 
@@ -320,7 +306,6 @@ body{background:#1B2232;-webkit-font-smoothing:antialiased;}
 @keyframes cardSlide{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 @keyframes donePop{from{opacity:0;transform:scale(0.94) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes speakPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.1);opacity:.7}}
-
 .splash-out{animation:splashOut 0.45s ease forwards;}
 .chat-in{animation:chatIn 0.45s cubic-bezier(0.22,1,0.36,1) both;}
 .w1{animation:slideUp 0.4s cubic-bezier(0.22,1,0.36,1) 0.00s both;}
@@ -333,20 +318,17 @@ body{background:#1B2232;-webkit-font-smoothing:antialiased;}
 .card-slide{animation:cardSlide 0.35s cubic-bezier(0.22,1,0.36,1) both;}
 .done-pop{animation:donePop 0.5s cubic-bezier(0.22,1,0.36,1) both;}
 .speaking{animation:speakPulse 1.5s ease-in-out infinite;}
-
 .prompt-card{transition:transform 0.18s,border-color 0.18s;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .prompt-card:active{transform:scale(0.97);}
 .send-btn{transition:transform 0.15s;}
 .send-btn:not(:disabled):active{transform:scale(0.96);}
 .mic-btn{transition:transform 0.15s;-webkit-tap-highlight-color:transparent;}
 .mic-btn.recording{animation:micRing 1s ease-out infinite;}
-.yes-btn{transition:transform 0.15s;-webkit-tap-highlight-color:transparent;}
 .yes-btn:active{transform:scale(0.97);}
-.no-btn{transition:transform 0.15s;-webkit-tap-highlight-color:transparent;}
+.no-btn{transition:transform 0.15s;}
 .choice-btn{transition:all 0.15s;-webkit-tap-highlight-color:transparent;}
 .action-cta{transition:transform 0.15s;-webkit-tap-highlight-color:transparent;}
 .action-cta:active{transform:scale(0.97);}
-.learn-next{transition:transform 0.15s;}
 .learn-next:active{transform:scale(0.97);}
 .attach-btn{transition:color 0.15s,background 0.15s;-webkit-tap-highlight-color:transparent;}
 .chat-input:focus{border-color:#D4A843 !important;box-shadow:0 0 0 3px rgba(212,168,67,.15) !important;outline:none;}
@@ -354,8 +336,7 @@ body{background:#1B2232;-webkit-font-smoothing:antialiased;}
 .lang-bar{display:flex;gap:6px;padding:8px 16px;background:#222D3F;border-bottom:1px solid rgba(212,168,67,.14);overflow-x:auto;}
 .lang-pill{flex-shrink:0;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid rgba(212,168,67,.25);color:#8A9BB5;background:transparent;font-family:inherit;transition:all 0.15s;}
 .lang-pill.active{background:rgba(212,168,67,.12);border-color:rgba(212,168,67,.5);color:#D4A843;}
-.upload-area{border:2px dashed rgba(45,212,191,.4);border-radius:16px;padding:28px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;transition:all 0.2s;background:rgba(45,212,191,.06);}
-.upload-area:active{border-color:#2DD4BF;background:rgba(45,212,191,.14);}
+.upload-area{border:2px dashed rgba(45,212,191,.4);border-radius:16px;padding:28px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;background:rgba(45,212,191,.06);}
 .banner-tab{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(212,168,67,.14);background:transparent;color:#8A9BB5;font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s;font-weight:500;}
 .banner-tab.active{background:rgba(212,168,67,.1);border-color:rgba(212,168,67,.4);color:#D4A843;}
 .dl-btn{flex:1;padding:14px;border-radius:14px;border:none;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;transition:transform 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;}
@@ -372,9 +353,17 @@ const Icons = {
   Send: ({color}) => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12L12 5L19 12" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   Speaker: () => <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M11 5L6 9H2v6h4l5 4V5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M19.07 4.93a10 10 0 010 14.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>,
   Download: () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
-  Check: ({color='#2DD4BF'}) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{flexShrink:0,animation:'checkPop 0.4s cubic-bezier(0.22,1,0.36,1) both'}}><circle cx="12" cy="12" r="10" fill={`${color}22`} stroke={color} strokeWidth="1.5"/><path d="M8 12l3 3 5-5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  Check: ({color='#2DD4BF'}) => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{flexShrink:0,animation:'checkPop 0.4s cubic-bezier(0.22,1,0.36,1) both'}}><circle cx="12" cy="12" r="10" fill={color+'22'} stroke={color} strokeWidth="1.5"/><path d="M8 12l3 3 5-5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
   Twitter: () => <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg>,
   Back: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+}
+
+function rrect(ctx,x,y,w,h,r) {
+  ctx.beginPath()
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r)
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h)
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r)
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath()
 }
 
 function SubHeader({ title, titleColor, onBack }) {
@@ -411,123 +400,6 @@ function SplashScreen({ onDone }) {
   return (
     <div className={leaving?'splash-out':''} style={{position:'fixed',inset:0,zIndex:999,background:B.navy,display:'flex',alignItems:'center',justifyContent:'center'}}>
       <img src="/logo.png" alt="Sabi AI" style={{width:280,maxWidth:'75vw',height:'auto',objectFit:'contain'}}/>
-    </div>
-  )
-}
-
-function ShareCard({ type, shopName, shopCategory, onClose }) {
-  const isMerchant = type === 'merchant'
-  const cat = BUSINESS_CATEGORIES.find(c=>c.id===shopCategory)
-
-  const shareTwitter = () => {
-    const text = isMerchant
-      ? `My shop now accepts Bitcoin. No POS machine. No transfer fees. Just scan and pay — instant. @fedi_xyz #BitcoinNigeria`
-      : `Just joined @BitcoinAbuja and claimed my first sats. Bitcoin is for Nigerians. @fedi_xyz #BitcoinNigeria #StackSats`
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://sabibtc.vercel.app')}`, '_blank')
-  }
-
-  if (isMerchant) {
-    return (
-      <div className="done-pop" style={{padding:20,display:'flex',flexDirection:'column',gap:16}}>
-        <div style={{fontSize:11,color:B.teal,fontWeight:600,letterSpacing:1,textTransform:'uppercase',textAlign:'center'}}>✦ Official Bitcoin Merchant</div>
-        <div style={{background:`linear-gradient(135deg,#1B2232,#2A3650)`,border:`2px solid ${B.gold}`,borderRadius:20,padding:28,display:'flex',flexDirection:'column',alignItems:'center',gap:12,textAlign:'center'}}>
-          <div style={{fontSize:48}}>{cat?.emoji||'🏪'}</div>
-          <div style={{fontSize:11,color:B.gold,fontWeight:600,letterSpacing:1,textTransform:'uppercase'}}>Bitcoin Merchant</div>
-          <div style={{fontSize:22,fontWeight:700,color:B.white,lineHeight:1.3}}>{shopName||'Your Shop'}</div>
-          <div style={{fontSize:14,color:B.mid}}>now accepts Bitcoin</div>
-          <div style={{width:'100%',height:1,background:`rgba(212,168,67,0.2)`,margin:'4px 0'}}/>
-          <div style={{fontSize:13,fontWeight:600,color:B.teal}}>Scan to pay · Instant · No POS needed</div>
-          <div style={{fontSize:11,color:B.dim}}>Powered by Fedi · Bitcoin Abuja</div>
-          <div style={{background:B.goldF,border:`1px solid ${B.goldB}`,borderRadius:12,padding:'10px 16px',width:'100%'}}>
-            <div style={{fontSize:11,color:B.gold,fontWeight:600}}>sabibtc.vercel.app</div>
-          </div>
-        </div>
-        <button className="dl-btn" style={{background:'#1DA1F2',color:'white',boxShadow:'0 3px 16px rgba(29,161,242,.3)'}} onClick={shareTwitter}>
-          <Icons.Twitter/> Share on X
-        </button>
-        <button onClick={onClose} style={{width:'100%',padding:12,borderRadius:14,border:`1px solid ${B.navyB}`,background:'transparent',color:B.mid,fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>← Back to Sabi AI</button>
-      </div>
-    )
-  }
-
-  return (
-    <div className="done-pop" style={{padding:20,display:'flex',flexDirection:'column',gap:16}}>
-      <div style={{fontSize:11,color:B.orange,fontWeight:600,letterSpacing:1,textTransform:'uppercase',textAlign:'center'}}>✦ Welcome to Bitcoin</div>
-      <div style={{background:`linear-gradient(135deg,#1B1A2E,#2A2040)`,border:`2px solid ${B.orange}`,borderRadius:20,padding:28,display:'flex',flexDirection:'column',alignItems:'center',gap:12,textAlign:'center'}}>
-        <div style={{fontSize:52,marginBottom:4}}>₿</div>
-        <div style={{fontSize:11,color:B.orange,fontWeight:600,letterSpacing:1,textTransform:'uppercase'}}>Bitcoin Owner</div>
-        <div style={{fontSize:20,fontWeight:700,color:B.white,lineHeight:1.4}}>I just joined<br/>Bitcoin Abuja.</div>
-        <div style={{fontSize:16,color:B.orange,fontWeight:600}}>I own Bitcoin.</div>
-        <div style={{fontSize:14,color:B.mid,lineHeight:1.5}}>No bank controls my money.</div>
-        <div style={{width:'100%',height:1,background:'rgba(249,115,22,0.2)',margin:'4px 0'}}/>
-        <div style={{fontSize:13,color:B.mid,lineHeight:1.6,fontStyle:'italic'}}>Building financial freedom<br/>— one sat at a time.</div>
-        <div style={{background:'rgba(249,115,22,0.08)',border:'1px solid rgba(249,115,22,0.25)',borderRadius:12,padding:'10px 16px',width:'100%'}}>
-          <div style={{fontSize:11,color:B.orange,fontWeight:600}}>Bitcoin Abuja · Powered by Fedi</div>
-          <div style={{fontSize:10,color:B.dim,marginTop:2}}>sabibtc.vercel.app</div>
-        </div>
-      </div>
-      <button className="dl-btn" style={{background:'#1DA1F2',color:'white',boxShadow:'0 3px 16px rgba(29,161,242,.3)'}} onClick={shareTwitter}>
-        <Icons.Twitter/> Share on X
-      </button>
-      <button onClick={onClose} style={{width:'100%',padding:12,borderRadius:14,border:`1px solid ${B.navyB}`,background:'transparent',color:B.mid,fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>← Back to Sabi AI</button>
-    </div>
-  )
-}
-
-function CommunityRequestForm({ onBack }) {
-  const [form, setForm] = useState({ name:'', community:'', city:'', fediLink:'', email:'' })
-  const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
-
-  const handleSubmit = async () => {
-    if (!form.name || !form.community || !form.city) return
-    setLoading(true)
-    await submitCommunityRequest({ ...form, created_at: new Date().toISOString() })
-    setSubmitted(true)
-    setLoading(false)
-  }
-
-  if (submitted) {
-    return (
-      <div style={{flex:1,display:'flex',flexDirection:'column'}}>
-        <SubHeader title="Community Request" titleColor={B.teal} onBack={onBack}/>
-        <div className="done-pop" style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:24,gap:16,textAlign:'center'}}>
-          <div style={{fontSize:52}}>🎉</div>
-          <div style={{fontSize:18,fontWeight:700,color:B.teal}}>Request Received!</div>
-          <div style={{fontSize:13,color:B.mid,lineHeight:1.65,maxWidth:280}}>Thank you for your interest in bringing Sabi AI to your community. Aisha will be in touch with you directly.</div>
-          <button className="action-cta" onClick={onBack} style={{marginTop:8,padding:'13px 28px',borderRadius:14,border:'none',background:`linear-gradient(135deg,${B.gold},${B.goldD})`,color:'#0D0A00',fontWeight:700,fontSize:14,cursor:'pointer',fontFamily:'inherit'}}>Back to Sabi AI</button>
-        </div>
-      </div>
-    )
-  }
-
-  const inp = (label, key, placeholder) => (
-    <div style={{display:'flex',flexDirection:'column',gap:6}}>
-      <div style={{fontSize:11,color:B.mid,letterSpacing:0.5,textTransform:'uppercase'}}>{label}</div>
-      <input value={form[key]} onChange={e=>setForm(p=>({...p,[key]:e.target.value}))} placeholder={placeholder}
-        style={{padding:'13px 14px',background:B.navy,border:`1px solid ${B.navyB}`,borderRadius:12,fontSize:14,color:B.white,fontFamily:'inherit',outline:'none'}}/>
-    </div>
-  )
-
-  const ready = form.name && form.community && form.city
-  return (
-    <div style={{flex:1,display:'flex',flexDirection:'column'}}>
-      <SubHeader title="Bring Sabi to Your Community" titleColor={B.teal} onBack={onBack}/>
-      <div style={{flex:1,overflowY:'auto',padding:'16px 16px 40px',display:'flex',flexDirection:'column',gap:14}}>
-        <div style={{background:B.navyL,border:`1px solid ${B.tealB}`,borderRadius:16,padding:16,fontSize:13,color:B.mid,lineHeight:1.65}}>
-          Sabi AI can be customised for any Bitcoin community on Fedi — same tool, your branding and community link.
-        </div>
-        {inp('Your Name', 'name', 'e.g. Musa Ibrahim')}
-        {inp('Community Name', 'community', 'e.g. Bitcoin Lagos')}
-        {inp('City & Country', 'city', 'e.g. Lagos, Nigeria')}
-        {inp('Fedi Community Link (optional)', 'fediLink', 'fedi:community...')}
-        {inp('Email or Twitter (optional)', 'email', 'how we can reach you')}
-        <button onClick={handleSubmit} disabled={!ready||loading}
-          style={{width:'100%',padding:14,borderRadius:14,border:'none',background:ready?`linear-gradient(135deg,${B.teal},#0ea5a0)`:B.navyLL,color:ready?'#0D1A1A':B.dim,fontWeight:700,fontSize:15,cursor:ready?'pointer':'default',fontFamily:'inherit',boxShadow:ready?'0 3px 16px rgba(45,212,191,.3)':'none',marginTop:4}}>
-          {loading?'Submitting...':'Submit Request →'}
-        </button>
-        <div style={{fontSize:11,color:B.dim,textAlign:'center'}}>Bitcoin Abuja · sabibtc.vercel.app</div>
-      </div>
     </div>
   )
 }
@@ -1212,4 +1084,297 @@ function MemberOnboarding({ onBack, community }) {
       </div>
     </div>
   )
+}
+export default function App() {
+  const communityId = getCommunityFromURL()
+  const community   = COMMUNITIES[communityId] || COMMUNITIES['bitcoin-abuja']
+
+  const [splashDone, setSplashDone]     = useState(false)
+  const [btc, setBtc]                   = useState({usd:96300,ngn:154000000})
+  const [messages, setMessages]         = useState([])
+  const [displayMsgs, setDisplayMsgs]   = useState([])
+  const [inputText, setInputText]       = useState('')
+  const [isLoading, setIsLoading]       = useState(false)
+  const [isSpeaking, setIsSpeaking]     = useState(false)
+  const [attachedFile, setAttachedFile] = useState(null)
+  const [activeLang, setActiveLang]     = useState('en')
+  const [isRecording, setIsRecording]   = useState(false)
+  const [voiceSupported, setVS]         = useState(false)
+  const [micError, setMicError]         = useState('')
+  const [mode, setMode]                 = useState('chat')
+  const messagesEndRef = useRef(null)
+  const fileInputRef   = useRef(null)
+  const recognitionRef = useRef(null)
+
+  const satNgn  = btc ? (btc.ngn/100000000).toFixed(2) : '1.54'
+  const welcome = WELCOME_BY_LANG[activeLang] || WELCOME_BY_LANG.en
+  const prompts = PROMPTS_BY_LANG[activeLang] || PROMPTS_BY_LANG.en
+
+  useEffect(()=>{
+    fetchBTC().then(setBtc)
+    const iv=setInterval(()=>fetchBTC().then(setBtc),180000)
+    if(window.SpeechRecognition||window.webkitSpeechRecognition) setVS(true)
+    return ()=>clearInterval(iv)
+  },[])
+
+  useEffect(()=>{ messagesEndRef.current?.scrollIntoView({behavior:'smooth'}) },[displayMsgs,isLoading])
+
+  const startRecording = useCallback(()=>{
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition
+    if(!SR){setMicError('Voice not supported on this browser.');return}
+    setMicError('')
+    const go=()=>{
+      const r=new SR()
+      r.lang={en:'en-NG',ha:'ha',yo:'yo',ig:'ig',pc:'en-NG'}[activeLang]||'en-NG'
+      r.continuous=false; r.interimResults=false
+      r.onstart=()=>setIsRecording(true)
+      r.onresult=e=>{const t=Array.from(e.results).map(x=>x[0].transcript).join('');setInputText(t)}
+      r.onspeechend=()=>r.stop()
+      r.onend=()=>{setIsRecording(false);recognitionRef.current=null}
+      r.onerror=e=>{
+        setIsRecording(false);recognitionRef.current=null
+        if(e.error==='not-allowed') setMicError('Microphone blocked. Allow mic in browser settings.')
+        else setMicError('Voice error. Please type instead.')
+      }
+      recognitionRef.current=r
+      try{r.start()}catch(e){setMicError('Could not start voice.')}
+    }
+    if(navigator.mediaDevices?.getUserMedia) navigator.mediaDevices.getUserMedia({audio:true}).then(go).catch(()=>setMicError('Microphone access denied.'))
+    else go()
+  },[activeLang])
+
+  const stopRecording=useCallback(()=>{recognitionRef.current?.stop();setIsRecording(false)},[])
+  const toggleMic=useCallback(()=>{if(isRecording)stopRecording();else startRecording()},[isRecording,startRecording,stopRecording])
+
+  const handleFileChange=async e=>{
+    const file=e.target.files[0];if(!file)return
+    const isImage=file.type.startsWith('image/')
+    const isPDF=file.type==='application/pdf'
+    if(!isImage&&!isPDF)return
+    const base64=await fileToBase64(file)
+    const previewUrl=isImage?URL.createObjectURL(file):null
+    setAttachedFile({type:isImage?'image':'pdf',base64,mediaType:file.type,name:file.name,previewUrl})
+    e.target.value=''
+  }
+
+  const sendMessage=async textOverride=>{
+    const text=(textOverride||inputText).trim()
+    if(text==='__MERCHANT__'){setMode('merchant');return}
+    if(text==='__MEMBER__'){setMode('member');return}
+    const file=attachedFile
+    if(!text&&!file)return
+    if(isLoading)return
+    if(messages.length===0&&text){const d=detectLang(text);if(d!=='en')setActiveLang(d)}
+    setInputText('');setAttachedFile(null);setMicError('')
+    setDisplayMsgs(p=>[...p,{r:'user',c:text,file}])
+    const parts=[]
+    if(file){
+      if(file.type==='image') parts.push({type:'image',source:{type:'base64',media_type:file.mediaType,data:file.base64}})
+      else parts.push({type:'document',source:{type:'base64',media_type:'application/pdf',data:file.base64}})
+    }
+    parts.push({type:'text',text:text||'Please look at this and help me understand it.'})
+    const newHistory=[...messages,{role:'user',content:parts}]
+    setMessages(newHistory)
+    setIsLoading(true)
+    try {
+      const {text:reply,audio}=await sendToAI(newHistory,btc,activeLang,community)
+      logConversation(activeLang,community.id)
+      setMessages(p=>[...p,{role:'assistant',content:[{type:'text',text:reply}]}])
+      setDisplayMsgs(p=>[...p,{r:'bot',c:reply}])
+      if(audio){
+        setIsSpeaking(true)
+        await speakElevenLabs(audio)
+        setTimeout(()=>setIsSpeaking(false),500)
+      } else if(activeLang!=='en'&&activeLang!=='pc'){
+        setIsSpeaking(true)
+        speakDevice(reply,activeLang)
+        const chk=setInterval(()=>{if(!window.speechSynthesis?.speaking){setIsSpeaking(false);clearInterval(chk)}},300)
+      }
+    } catch(err){
+      const errMsg=ERROR_BY_LANG[activeLang]||ERROR_BY_LANG.en
+      setDisplayMsgs(p=>[...p,{r:'error',c:errMsg}])
+      setMessages(p=>[...p,{role:'assistant',content:[{type:'text',text:errMsg}]}])
+    }
+    setIsLoading(false)
+  }
+
+  const handleKeyDown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}}
+  const stopSpeaking=()=>{window.speechSynthesis?.cancel();setIsSpeaking(false)}
+  const hasMessages=displayMsgs.length>0
+  const langLabels={en:'EN',ha:'HA',yo:'YO',ig:'IG',pc:'PID'}
+  const wrap = children => (
+    <div style={{background:B.navy,minHeight:'100dvh',maxWidth:440,margin:'0 auto',fontFamily:"'Satoshi',-apple-system,sans-serif",color:B.white,display:'flex',flexDirection:'column'}}>
+      <style>{CSS}</style>
+      {children}
+    </div>
+  )
+
+  if(mode==='merchant') return wrap(<MerchantOnboarding onBack={()=>setMode('chat')} community={community}/>)
+  if(mode==='member')   return wrap(<MemberOnboarding   onBack={()=>setMode('chat')} community={community}/>)
+  if(mode==='request')  return wrap(<CommunityRequestForm onBack={()=>setMode('chat')}/>)
+  if(mode==='stats')    return wrap(<StatsView onBack={()=>setMode('chat')}/>)
+
+  return wrap(
+    <>
+      {!splashDone&&<SplashScreen onDone={()=>setSplashDone(true)}/>}
+      <div className={splashDone?'chat-in':''} style={{display:'flex',flexDirection:'column',flex:1}}>
+
+        <div style={{padding:'12px 16px',background:B.navyL,borderBottom:`1px solid ${B.navyB}`,display:'flex',justifyContent:'space-between',alignItems:'center',position:'sticky',top:0,zIndex:10}}>
+          <img src={community.appLogo} alt="Sabi AI" style={{height:34,width:'auto',objectFit:'contain'}}/>
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            {isSpeaking&&(
+              <button onClick={stopSpeaking} className="speaking"
+                style={{display:'flex',alignItems:'center',gap:5,background:'rgba(45,212,191,.1)',border:`1px solid ${B.tealB}`,borderRadius:100,padding:'4px 10px',fontSize:11,color:B.teal,cursor:'pointer',fontFamily:'inherit'}}>
+                <Icons.Speaker/> Stop
+              </button>
+            )}
+            <button onClick={()=>setMode('stats')}
+              style={{fontSize:10,color:B.dim,background:'transparent',border:`1px solid ${B.dim}`,borderRadius:8,padding:'4px 8px',cursor:'pointer',fontFamily:'inherit',letterSpacing:0.5}}>
+              Stats
+            </button>
+            <div style={{display:'flex',alignItems:'center',gap:7,background:B.goldF,border:`1px solid ${B.goldB}`,borderRadius:100,padding:'5px 13px'}}>
+              <div style={{width:6,height:6,borderRadius:'50%',background:B.green,animation:'liveDot 2s ease infinite'}}/>
+              <span style={{fontSize:11,fontWeight:500,color:B.white}}>1 sat</span>
+              <span style={{fontSize:12,fontWeight:700,color:B.gold}}>₦{satNgn}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="lang-bar">
+          {Object.entries(langLabels).map(([code,label])=>(
+            <button key={code} className={`lang-pill${activeLang===code?' active':''}`} onClick={()=>setActiveLang(code)}>{label}</button>
+          ))}
+        </div>
+
+        <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column'}}>
+          {!hasMessages&&!isLoading&&(
+            <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'28px 20px 20px'}}>
+              <h1 className="w1" style={{fontSize:24,fontWeight:700,color:B.white,textAlign:'center',marginBottom:10}}>{welcome.greeting}</h1>
+              <p className="w2" style={{fontSize:14,color:B.mid,textAlign:'center',lineHeight:1.65,marginBottom:6,maxWidth:290}}>{welcome.sub}</p>
+              <p className="w2" style={{fontSize:11,color:B.dim,textAlign:'center',marginBottom:4,letterSpacing:0.4}}>{welcome.langs}</p>
+              <p className="w2" style={{fontSize:11,color:B.dim,textAlign:'center',marginBottom:22}}>Joined by {community.memberCount} members across Nigeria</p>
+              <div className="w3" style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,width:'100%',maxWidth:360}}>
+                {prompts.map((p,i)=>{
+                  const isMer=p.msg==='__MERCHANT__', isMem=p.msg==='__MEMBER__'
+                  return (
+                    <button key={i} onClick={()=>sendMessage(p.msg)} className="prompt-card"
+                      style={{background:B.navyL,border:`1px solid ${isMer?B.tealB:isMem?B.orangeB:B.navyB}`,borderRadius:16,padding:'16px 14px 14px',textAlign:'left',boxShadow:'0 2px 12px rgba(0,0,0,.3)',fontFamily:'inherit'}}>
+                      <div style={{width:20,height:3,borderRadius:2,background:isMer?B.teal:isMem?B.orange:i%2===0?B.gold:B.goldD,marginBottom:12}}/>
+                      <div style={{fontSize:13,fontWeight:400,color:B.white,lineHeight:1.4}}>{p.label}</div>
+                    </button>
+                  )
+                })}
+              </div>
+              {voiceSupported&&(
+                <div className="w4" style={{marginTop:16,display:'flex',alignItems:'center',gap:6,color:B.dim,fontSize:11}}>
+                  <Icons.Mic/><span>Speak in any language — Sabi understands you</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {hasMessages&&(
+            <div style={{padding:'16px 16px 8px',display:'flex',flexDirection:'column',gap:16}}>
+              {displayMsgs.map((msg,i)=>(
+                <div key={i} className={msg.r==='user'?'msg-user':'msg-bot'} style={{display:'flex',justifyContent:msg.r==='user'?'flex-end':'flex-start',alignItems:'flex-start',gap:9}}>
+                  {msg.r!=='user'&&<img src={community.appLogo} alt="Sabi" style={{width:32,height:32,objectFit:'contain',flexShrink:0,marginTop:2}}/>}
+                  <div style={{maxWidth:'80%',display:'flex',flexDirection:'column',alignItems:msg.r==='user'?'flex-end':'flex-start',gap:5}}>
+                    {msg.r==='error'?(
+                      <div className="error-bubble">{msg.c}</div>
+                    ):(
+                      <div style={{padding:'12px 16px',fontSize:14,lineHeight:1.75,whiteSpace:'pre-wrap',fontFamily:'inherit',
+                        ...(msg.r==='user'
+                          ?{background:`linear-gradient(135deg,${B.gold},${B.goldD})`,color:'#0D0A00',fontWeight:600,borderRadius:'18px 18px 4px 18px',boxShadow:'0 3px 14px rgba(212,168,67,.3)'}
+                          :{background:B.navyL,color:B.white,borderRadius:'18px 18px 18px 4px',border:`1px solid ${B.navyB}`})}}>
+                        {msg.file&&(
+                          <div style={{marginBottom:msg.c?8:0}}>
+                            {msg.file.type==='image'&&msg.file.previewUrl
+                              ?<img src={msg.file.previewUrl} alt="attachment" style={{maxWidth:200,maxHeight:160,borderRadius:10,display:'block',objectFit:'cover'}}/>
+                              :<div style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(212,168,67,.15)',border:'1px solid rgba(212,168,67,.3)',borderRadius:8,padding:'5px 10px',fontSize:11,color:B.gold}}>{msg.file.name}</div>
+                            }
+                          </div>
+                        )}
+                        {msg.c}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {isLoading&&(
+                <div className="msg-bot" style={{display:'flex',alignItems:'flex-start',gap:9}}>
+                  <img src={community.appLogo} alt="Sabi" style={{width:32,height:32,objectFit:'contain',flexShrink:0,marginTop:2}}/>
+                  <div style={{background:B.navyL,borderRadius:'18px 18px 18px 4px',padding:'14px 18px',border:`1px solid ${B.navyB}`}}>
+                    <div style={{display:'flex',gap:5,alignItems:'center'}}>
+                      {[0,1,2].map(j=><div key={j} style={{width:7,height:7,borderRadius:'50%',background:B.gold,animation:`bounce 1.2s ${j*0.15}s ease-in-out infinite`}}/>)}
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef}/>
+            </div>
+          )}
+        </div>
+
+        <div style={{padding:'12px 16px 20px',background:B.navyL,borderTop:`1px solid ${B.navyB}`,position:'sticky',bottom:0}}>
+          {isRecording&&(
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8,padding:'8px 12px',background:B.goldF,border:`1px solid ${B.goldB}`,borderRadius:12}}>
+              <div style={{width:8,height:8,borderRadius:'50%',background:B.gold,animation:'pulse 1s ease-in-out infinite'}}/>
+              <span style={{fontSize:12,color:B.gold,fontWeight:500}}>Listening… tap mic to stop</span>
+            </div>
+          )}
+          {micError&&(
+            <div style={{marginBottom:8,padding:'8px 12px',background:B.redF,border:`1px solid ${B.redB}`,borderRadius:12}}>
+              <span style={{fontSize:12,color:B.red}}>{micError}</span>
+            </div>
+          )}
+          {attachedFile&&(
+            <div style={{display:'flex',alignItems:'center',gap:8,background:B.navy,border:`1px solid ${B.navyB}`,borderRadius:12,padding:'7px 10px',marginBottom:8,maxWidth:260}}>
+              {attachedFile.type==='image'&&attachedFile.previewUrl
+                ?<img src={attachedFile.previewUrl} alt="preview" style={{width:34,height:34,borderRadius:7,objectFit:'cover',flexShrink:0}}/>
+                :<div style={{width:34,height:34,borderRadius:7,background:B.navyLL,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>📄</div>
+              }
+              <span style={{fontSize:11.5,color:B.white,flex:1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{attachedFile.name}</span>
+              <button onClick={()=>setAttachedFile(null)} style={{width:20,height:20,borderRadius:'50%',background:B.navyLL,border:'none',color:B.mid,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,flexShrink:0}}>✕</button>
+            </div>
+          )}
+          <div style={{display:'flex',gap:8,alignItems:'center'}}>
+            <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" onChange={handleFileChange} style={{display:'none'}}/>
+            <button className="attach-btn" onClick={()=>fileInputRef.current?.click()}
+              style={{width:40,height:40,borderRadius:12,background:attachedFile?B.goldF:'transparent',border:`1px solid ${attachedFile?B.goldB:B.navyB}`,color:attachedFile?B.gold:B.dim,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <Icons.Attach/>
+            </button>
+            <input className="chat-input" value={inputText} onChange={e=>setInputText(e.target.value)} onKeyDown={handleKeyDown}
+              placeholder={isRecording?'Listening…':attachedFile?'Add a question… (optional)':'Ask anything…'}
+              style={{flex:1,padding:'13px 18px',background:B.navy,border:`1px solid ${B.navyB}`,borderRadius:28,fontSize:14,color:B.white,fontFamily:'inherit',transition:'border-color 0.2s,box-shadow 0.2s'}}/>
+            {voiceSupported&&!inputText.trim()&&!attachedFile&&(
+              <button className={`mic-btn${isRecording?' recording':''}`} onClick={toggleMic}
+                style={{width:46,height:46,borderRadius:'50%',border:'none',background:isRecording?`linear-gradient(135deg,${B.gold},${B.goldD})`:B.navyLL,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,color:isRecording?'#0D0A00':B.mid,boxShadow:isRecording?'0 3px 16px rgba(212,168,67,.5)':'none'}}>
+                <Icons.Mic/>
+              </button>
+            )}
+            {(inputText.trim()||attachedFile)&&(
+              <button onClick={()=>sendMessage()} disabled={isLoading} className="send-btn"
+                style={{width:46,height:46,borderRadius:'50%',border:'none',background:!isLoading?`linear-gradient(135deg,${B.gold},${B.goldD})`:B.navyLL,cursor:!isLoading?'pointer':'default',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:!isLoading?'0 3px 16px rgba(212,168,67,.4)':'none'}}>
+                <Icons.Send color={!isLoading?'#0D0A00':B.dim}/>
+              </button>
+            )}
+          </div>
+          <div style={{display:'flex',justifyContent:'center',alignItems:'center',gap:16,marginTop:8}}>
+            <div style={{fontSize:9,color:B.dim,letterSpacing:0.8}}>Bitcoin Abuja · Powered by Fedi</div>
+            <button onClick={()=>setMode('request')} style={{fontSize:9,color:B.dim,background:'transparent',border:'none',cursor:'pointer',fontFamily:'inherit',letterSpacing:0.5,textDecoration:'underline'}}>
+              Bring Sabi to your community
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+function rrect(ctx,x,y,w,h,r) {
+  ctx.beginPath()
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r)
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h)
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r)
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath()
 }
