@@ -52,26 +52,59 @@ async function fetchBTC() {
   return { usd: 96300, ngn: 154000000 }
 }
 
-async function speakElevenLabs(audioBase64) {
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      const result = String(reader.result || '')
+      resolve(result.split(',')[1] || '')
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+async function transcribeAudioBlob(blob) {
+  const audioBase64 = await blobToBase64(blob)
+  const response = await fetch('/api/transcribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      audioBase64,
+      mimeType: blob.type || 'audio/webm',
+    }),
+  })
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.error || 'Transcription failed')
+  }
+
+  const data = await response.json()
+  return data.text || ''
+}
+
+function createAudioFromBase64(audioBase64) {
   try {
     const bytes = Uint8Array.from(atob(audioBase64), c => c.charCodeAt(0))
     const blob = new Blob([bytes], { type: 'audio/mpeg' })
     const url = URL.createObjectURL(blob)
     const audio = new Audio(url)
-    await audio.play()
-    return true
+    audio.__objectUrl = url
+    return audio
   } catch (e) {
-    return false
+    return null
   }
 }
 
 function speakDevice(text, lang) {
-  if (!window.speechSynthesis) return
+  if (!window.speechSynthesis) return false
   window.speechSynthesis.cancel()
   const u = new SpeechSynthesisUtterance(text.replace(/[₿⚡●#*•①②③④⑤]/g, ' '))
   u.lang = { en: 'en-NG', ha: 'ha', yo: 'yo', ig: 'ig', pc: 'en-NG' }[lang] || 'en-NG'
   u.rate = 0.9
   window.speechSynthesis.speak(u)
+  return true
 }
 
 function fileToBase64(file) {
@@ -307,7 +340,7 @@ const MERCHANT_STEPS = [
     ins: 'Step 3 of 6 — Join Community',
     q: 'Now join the Bitcoin Abuja community on Fedi. This is separate from your wallet. Have you joined?',
     yes: 'Welcome to the community.',
-    no: "Let us get you in right now.",
+    no: 'Let us get you in right now.',
     joinScreen: true,
   },
   {
@@ -385,7 +418,7 @@ async function sendToAI(history, btc, activeLang, community) {
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages: history, system, language: activeLang, tts: true }),
+    body: JSON.stringify({ messages: history, system, language: activeLang, tts: true, communityId: community.id }),
   })
   if (!response.ok) throw new Error('API ' + response.status)
   const data = await response.json()
@@ -452,7 +485,7 @@ const B = {
   purpleB: 'rgba(167,139,250,.3)',
 }
 
-const CSS = `@import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700&display=swap');
+const CSS = `@import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{background:#1B2232;-webkit-font-smoothing:antialiased;}
 ::-webkit-scrollbar{width:0;}
@@ -567,6 +600,17 @@ function rrect(ctx, x, y, w, h, r) {
   ctx.quadraticCurveTo(x, y, x + r, y)
   ctx.closePath()
 }
+
+const inputStyle = {
+  padding: '14px 16px',
+  background: B.navy,
+  border: `1px solid ${B.navyB}`,
+  borderRadius: 14,
+  fontSize: 14,
+  color: B.white,
+  fontFamily: 'inherit',
+  outline: 'none',
+}
 function SubHeader({ title, titleColor, onBack }) {
   return (
     <div
@@ -588,7 +632,7 @@ function SubHeader({ title, titleColor, onBack }) {
       <div
         style={{
           fontSize: 13,
-          fontWeight: 600,
+          fontWeight: 700,
           color: titleColor || B.white,
           letterSpacing: 0.5,
           textTransform: 'uppercase',
@@ -610,7 +654,7 @@ function Progress({ step, total, color }) {
             width: `${(step / total) * 100}%`,
             background: `linear-gradient(90deg,${color},${B.gold})`,
             borderRadius: 3,
-            transition: 'width 0.5s cubic-bezier(0.22,1,0.36,1)',
+            transition: 'width 0.45s cubic-bezier(0.22,1,0.36,1)',
           }}
         />
       </div>
@@ -708,7 +752,7 @@ function ShareCard({ type, shopName = '', shopCategory = '', community = COMMUNI
           }}
         >
           <div style={{ fontSize: 42 }}>{emoji}</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: B.white, lineHeight: 1.25 }}>{title}</div>
+          <div style={{ fontSize: 22, fontWeight: 900, color: B.white, lineHeight: 1.25 }}>{title}</div>
           <div style={{ fontSize: 14, color: B.mid, lineHeight: 1.7 }}>{subtitle}</div>
           {type === 'merchant' && (
             <div
@@ -824,7 +868,7 @@ function CommunityRequestForm({ onBack }) {
             }}
           >
             <div style={{ fontSize: 44, marginBottom: 10 }}>✓</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: B.white, marginBottom: 8 }}>Request received</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: B.white, marginBottom: 8 }}>Request received</div>
             <div style={{ fontSize: 14, color: B.mid, lineHeight: 1.7 }}>
               Sabi can be adapted for your community.
             </div>
@@ -861,42 +905,12 @@ function CommunityRequestForm({ onBack }) {
           Fill this in and it gets saved for follow-up.
         </div>
 
-        <input
-          value={name}
-          onChange={e => setName(e.target.value)}
-          placeholder="Your name"
-          style={inputStyle}
-        />
-        <input
-          value={community}
-          onChange={e => setCommunity(e.target.value)}
-          placeholder="Community name"
-          style={inputStyle}
-        />
-        <input
-          value={city}
-          onChange={e => setCity(e.target.value)}
-          placeholder="City"
-          style={inputStyle}
-        />
-        <input
-          value={country}
-          onChange={e => setCountry(e.target.value)}
-          placeholder="Country"
-          style={inputStyle}
-        />
-        <input
-          value={fediLink}
-          onChange={e => setFediLink(e.target.value)}
-          placeholder="Fedi link (optional)"
-          style={inputStyle}
-        />
-        <input
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="Email (optional)"
-          style={inputStyle}
-        />
+        <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" style={inputStyle} />
+        <input value={community} onChange={e => setCommunity(e.target.value)} placeholder="Community name" style={inputStyle} />
+        <input value={city} onChange={e => setCity(e.target.value)} placeholder="City" style={inputStyle} />
+        <input value={country} onChange={e => setCountry(e.target.value)} placeholder="Country" style={inputStyle} />
+        <input value={fediLink} onChange={e => setFediLink(e.target.value)} placeholder="Fedi link (optional)" style={inputStyle} />
+        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (optional)" style={inputStyle} />
 
         <button
           onClick={submit}
@@ -956,7 +970,7 @@ function StatsView({ onBack }) {
         <div style={{ background: B.navyL, border: `1px solid ${B.goldB}`, borderRadius: 16, padding: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ fontSize: 32, flexShrink: 0 }}>🇳🇬</div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: B.white, lineHeight: 1.3, marginBottom: 4 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: B.white, lineHeight: 1.3, marginBottom: 4 }}>
               Nigeria's Bitcoin AI guide.
               <br />
               <span style={{ color: B.gold }}>Real people. Real language. Real sats.</span>
@@ -981,7 +995,7 @@ function StatsView({ onBack }) {
         </div>
 
         <div style={{ background: B.navyL, border: `1px solid ${B.dim}`, borderRadius: 16, padding: 18 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: B.gold }} />
             Language Breakdown
           </div>
@@ -1002,7 +1016,7 @@ function StatsView({ onBack }) {
                 return (
                   <div key={i} style={{ marginBottom: i < sorted.length - 1 ? 12 : 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: B.white }}>{LANG_NAMES_S[lang] || lang}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: B.white }}>{LANG_NAMES_S[lang] || lang}</span>
                       <span style={{ fontSize: 11, color: B.mid }}>{count}</span>
                     </div>
                     <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
@@ -1015,7 +1029,7 @@ function StatsView({ onBack }) {
         </div>
 
         <div style={{ background: B.navyL, border: `1px solid ${B.dim}`, borderRadius: 16, padding: 18 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: B.teal }} />
             Daily Conversations
           </div>
@@ -1047,7 +1061,7 @@ function StatsView({ onBack }) {
         </div>
 
         <div style={{ background: B.navyL, border: `1px solid ${B.dim}`, borderRadius: 16, padding: 18 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: B.orange }} />
             Active Merchants
           </div>
@@ -1075,7 +1089,7 @@ function StatsView({ onBack }) {
 
         {data?.requests?.length > 0 && (
           <div style={{ background: B.navyL, border: `1px solid ${B.dim}`, borderRadius: 16, padding: 18 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 7, height: 7, borderRadius: '50%', background: B.purple }} />
               Community Requests
             </div>
@@ -1098,23 +1112,13 @@ function StatsView({ onBack }) {
   )
 }
 
-const inputStyle = {
-  padding: '14px 16px',
-  background: B.navy,
-  border: `1px solid ${B.navyB}`,
-  borderRadius: 14,
-  fontSize: 14,
-  color: B.white,
-  fontFamily: 'inherit',
-  outline: 'none',
-}
 function JoinCommunityScreen({ community, onDone, onBack, titleColor, title }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <SubHeader title={title} titleColor={titleColor} onBack={onBack} />
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ background: B.navyL, borderRadius: 20, padding: 20, border: `1px solid ${B.orangeB}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: B.white, textAlign: 'center', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white, textAlign: 'center', lineHeight: 1.5 }}>
             Join {community.name} on Fedi
           </div>
           <div style={{ fontSize: 12, color: B.gold, background: B.goldF, border: `1px solid ${B.goldB}`, borderRadius: 10, padding: '10px 14px', lineHeight: 1.6, textAlign: 'center', width: '100%' }}>
@@ -1138,7 +1142,7 @@ function JoinCommunityScreen({ community, onDone, onBack, titleColor, title }) {
               border: 'none',
               background: `linear-gradient(135deg,${B.orange},#c2610f)`,
               color: 'white',
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: 14,
               cursor: 'pointer',
               fontFamily: 'inherit',
@@ -1180,7 +1184,7 @@ function StepCard({ step, feedback, titleColor, onYes, onNo, onSkip }) {
       }}
     >
       <div style={{ fontSize: 10, color: B.dim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>{step.ins}</div>
-      <div style={{ fontSize: 16, fontWeight: 600, color: B.white, lineHeight: 1.5, marginBottom: 20 }}>{step.q}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: B.white, lineHeight: 1.5, marginBottom: 20 }}>{step.q}</div>
 
       {feedback === 'yes' && (
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 13px', background: `${titleColor}18`, border: `1px solid ${titleColor}40`, borderRadius: 12, marginBottom: 14 }}>
@@ -1223,7 +1227,7 @@ function StepCard({ step, feedback, titleColor, onYes, onNo, onSkip }) {
                 border: 'none',
                 background: `linear-gradient(135deg,${titleColor},${titleColor}cc)`,
                 color: titleColor === B.teal ? '#0D1A1A' : 'white',
-                fontWeight: 700,
+                fontWeight: 800,
                 fontSize: 15,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
@@ -1242,7 +1246,7 @@ function StepCard({ step, feedback, titleColor, onYes, onNo, onSkip }) {
                 border: `1px solid ${B.redB}`,
                 background: B.redF,
                 color: B.red,
-                fontWeight: 600,
+                fontWeight: 700,
                 fontSize: 15,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
@@ -1290,7 +1294,7 @@ function ContextCarousel({ cards, onDone, onBack, title, titleColor }) {
 
         <div className="card-slide" key={idx} style={{ background: B.navyL, border: `1px solid ${B.navyB}`, borderRadius: 20, padding: 22, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ fontSize: 40 }}>{card.icon}</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: B.white, lineHeight: 1.3 }}>{card.title}</div>
+          <div style={{ fontSize: 18, fontWeight: 800, color: B.white, lineHeight: 1.3 }}>{card.title}</div>
           <div style={{ fontSize: 14, color: B.mid, lineHeight: 1.75 }}>{card.body}</div>
           <div className="stat-pill" style={{ background: `${card.statColor}18`, border: `1px solid ${card.statColor}33`, color: card.statColor }}>
             {card.stat}
@@ -1319,7 +1323,7 @@ function ContextCarousel({ cards, onDone, onBack, title, titleColor }) {
               border: 'none',
               background: `linear-gradient(135deg,${B.orange},#c2610f)`,
               color: 'white',
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: 15,
               cursor: 'pointer',
               fontFamily: 'inherit',
@@ -1339,7 +1343,7 @@ function ContextCarousel({ cards, onDone, onBack, title, titleColor }) {
               border: 'none',
               background: `linear-gradient(135deg,${titleColor},${titleColor}cc)`,
               color: titleColor === B.teal ? '#0D1A1A' : 'white',
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: 15,
               cursor: 'pointer',
               fontFamily: 'inherit',
@@ -1367,7 +1371,6 @@ function ContextCarousel({ cards, onDone, onBack, title, titleColor }) {
     </div>
   )
 }
-
 function MerchantOnboarding({ onBack, community }) {
   const [phase, setPhase] = useState('steps')
   const [step, setStep] = useState(0)
@@ -1379,31 +1382,20 @@ function MerchantOnboarding({ onBack, community }) {
   const [qrData, setQrData] = useState(null)
   const [bannerMode, setBannerMode] = useState('print')
   const [bannerReady, setBannerReady] = useState(false)
-  const [phaseStack, setPhaseStack] = useState([])
   const canvasRef = useRef(null)
 
   const currentStep = MERCHANT_STEPS[Math.min(step, MERCHANT_STEPS.length - 1)]
 
-  const pushPhase = next => {
-    setPhaseStack(prev => [...prev, phase])
-    setPhase(next)
-  }
-
-  const popPhase = () => {
-    setPhaseStack(prev => {
-      const copy = [...prev]
-      const prevPhase = copy.pop()
-      setPhase(prevPhase || 'steps')
-      return copy
-    })
-  }
+  useEffect(() => {
+    if (step >= MERCHANT_STEPS.length) setPhase('name')
+  }, [step])
 
   const handleYes = () => {
     setFeedback('yes')
     setTimeout(() => {
       setFeedback(null)
       setStep(p => p + 1)
-    }, 1000)
+    }, 900)
   }
 
   const handleNo = action => {
@@ -1412,19 +1404,16 @@ function MerchantOnboarding({ onBack, community }) {
       return
     }
     if (currentStep?.joinScreen) {
-      pushPhase('join')
+      setPhase('join')
       return
     }
     setFeedback('no')
   }
 
   useEffect(() => {
-    if (step >= MERCHANT_STEPS.length) setPhase('name')
-  }, [step])
-
-  useEffect(() => {
     if (phase !== 'banner' || !canvasRef.current || !qrData) return
-    setBannerReady(false)
+
+    let cancelled = false
     const canvas = canvasRef.current
     const isPrint = bannerMode === 'print'
     const W = isPrint ? 1240 : 1080
@@ -1432,144 +1421,226 @@ function MerchantOnboarding({ onBack, community }) {
     canvas.width = W
     canvas.height = H
 
-    const ctx = canvas.getContext('2d')
-    ctx.fillStyle = '#FFFFFF'
-    ctx.fillRect(0, 0, W, H)
+    const loadImage = src =>
+      new Promise(resolve => {
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => resolve(img)
+        img.onerror = () => resolve(null)
+        img.src = src
+      })
 
-    const grd = ctx.createLinearGradient(0, 0, W, 0)
-    grd.addColorStop(0, '#1B2232')
-    grd.addColorStop(0.5, '#2A3650')
-    grd.addColorStop(1, '#1B2232')
-    ctx.fillStyle = grd
-    ctx.fillRect(0, 0, W, isPrint ? 90 : 120)
-    ctx.fillStyle = '#1B2232'
-    ctx.fillRect(0, H - (isPrint ? 70 : 100), W, isPrint ? 70 : 100)
-    ctx.fillStyle = '#F97316'
-    ctx.fillRect(0, isPrint ? 90 : 120, W, 6)
+    const wrapText = (ctx, text, x, y, maxWidth, lineHeight, maxLines = 99) => {
+      const words = String(text || '').split(/\s+/)
+      let line = ''
+      let lines = 0
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line ? line + ' ' + words[n] : words[n]
+        if (ctx.measureText(testLine).width > maxWidth && n > 0) {
+          ctx.fillText(line, x, y)
+          line = words[n]
+          y += lineHeight
+          lines++
+          if (lines >= maxLines - 1) break
+        } else {
+          line = testLine
+        }
+      }
+      if (lines < maxLines) ctx.fillText(line, x, y)
+      return y
+    }
 
-    const [s1, s2] = BILINGUAL[bannerLang] || BILINGUAL.en
-    const cat = BUSINESS_CATEGORIES.find(c => c.id === shopCategory)
-    const catEmoji = cat?.emoji || '🏪'
-    const name = shopName || 'Your Shop'
-    const loc = shopLocation || ''
+    const drawBanner = async () => {
+      const [fediImg, btcImg, qrImg] = await Promise.all([
+        loadImage('/fedi-logo-dark.png'),
+        loadImage('/bitcoin-abuja-logo.png'),
+        loadImage(qrData),
+      ])
+      if (cancelled) return
 
-    const drawAll = (qrImg, fediImg, btcImg) => {
+      const ctx = canvas.getContext('2d')
+
+      const bg = ctx.createLinearGradient(0, 0, W, H)
+      bg.addColorStop(0, '#0F1726')
+      bg.addColorStop(0.5, '#1B2232')
+      bg.addColorStop(1, '#0B1220')
+      ctx.fillStyle = bg
+      ctx.fillRect(0, 0, W, H)
+
+      const accent = ctx.createLinearGradient(0, 0, W, 0)
+      accent.addColorStop(0, '#F97316')
+      accent.addColorStop(0.5, '#D4A843')
+      accent.addColorStop(1, '#F97316')
+      ctx.fillStyle = accent
+      ctx.fillRect(0, 0, W, isPrint ? 10 : 12)
+
+      ctx.save()
+      ctx.globalAlpha = 0.08
+      for (let i = 0; i < 120; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#D4A843' : '#2DD4BF'
+        ctx.beginPath()
+        ctx.arc((i * 97) % W, (i * 53) % H, i % 3 === 0 ? 1.5 : 1, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      ctx.restore()
+
+      const cat = BUSINESS_CATEGORIES.find(c => c.id === shopCategory)
+      const catEmoji = cat?.emoji || '🏪'
+      const catLabel = cat?.label || 'Business'
+      const name = shopName || 'Your Shop'
+      const loc = shopLocation || ''
+      const [s1, s2] = BILINGUAL[bannerLang] || BILINGUAL.en
+
       if (isPrint) {
-        const QS = 340
-        const QX = W - QS - 80
-        const QY = (H - QS) / 2 - 10
-        ctx.fillStyle = '#F8F8F8'
-        rrect(ctx, QX - 20, QY - 20, QS + 40, QS + 40, 20)
+        const leftX = 70
+        const leftW = 640
+        const rightX = 820
+        const rightW = 350
+
+        ctx.fillStyle = 'rgba(255,255,255,0.04)'
+        rrect(ctx, 50, 40, W - 100, H - 110, 28)
         ctx.fill()
-        if (qrImg) ctx.drawImage(qrImg, QX, QY, QS, QS)
-        ctx.fillStyle = '#8A9BB5'
-        ctx.font = '18px Arial'
-        ctx.textBaseline = 'top'
-        ctx.fillText('Scan to pay with Bitcoin Lightning', QX - 20, QY + QS + 26)
-        ctx.font = '38px Arial'
-        ctx.fillText(catEmoji, 80, 112)
-        ctx.fillStyle = '#1B2232'
-        ctx.font = 'bold 48px Arial'
-        ctx.fillText(name, 80, 165)
-        ctx.font = 'bold 40px Arial'
-        ctx.fillText('now accepts', 80, 228)
-        ctx.fillStyle = '#F97316'
-        ctx.font = 'bold 70px Arial'
-        ctx.fillText('Bitcoin  ₿', 80, 278)
-        if (loc) {
-          ctx.fillStyle = '#8A9BB5'
-          ctx.font = '22px Arial'
-          ctx.fillText('📍 ' + loc, 80, 366)
-        }
-        ctx.fillStyle = '#4A5A72'
-        ctx.font = '24px Arial'
-        ctx.fillText(s1, 80, loc ? 404 : 366)
-        if (s2) {
-          ctx.fillStyle = '#8A9BB5'
-          ctx.font = '20px Arial'
-          ctx.fillText(s2, 80, loc ? 438 : 400)
-        }
-        ctx.fillStyle = '#2DD4BF'
-        ctx.font = '17px Arial'
-        ctx.fillText('⚡ Instant  ·  No POS  ·  No transfer fees  ·  24/7', 80, 475)
-        ctx.fillStyle = '#FFFFFF'
-        ctx.font = '18px Arial'
-        ctx.textBaseline = 'middle'
-        ctx.fillText('Bitcoin Abuja  ·  sabibtc.vercel.app', 40, H - 35)
-        if (btcImg) ctx.drawImage(btcImg, W - 256, (90 - 70) / 2, 240, 70)
-        if (fediImg) ctx.drawImage(fediImg, W - 120, H - 50, 100, 30)
-      } else {
-        const QS = 280
-        const QX = (W - QS) / 2
-        const QY = 210
-        ctx.fillStyle = '#F8F8F8'
-        rrect(ctx, QX - 20, QY - 20, QS + 40, QS + 40, 20)
+
+        ctx.fillStyle = 'rgba(27,34,50,0.9)'
+        rrect(ctx, leftX - 18, 82, leftW, 430, 28)
         ctx.fill()
-        if (qrImg) ctx.drawImage(qrImg, QX, QY, QS, QS)
-        ctx.fillStyle = '#8A9BB5'
-        ctx.font = '21px Arial'
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'top'
-        ctx.fillText('Scan to pay with Bitcoin', W / 2, QY + QS + 18)
-        ctx.fillStyle = '#FFFFFF'
-        ctx.font = 'bold 32px Arial'
-        ctx.textBaseline = 'middle'
-        ctx.fillText(catEmoji + ' ' + name, W / 2, 50)
-        if (loc) {
-          ctx.fillStyle = 'rgba(255,255,255,0.6)'
-          ctx.font = '18px Arial'
-          ctx.fillText('📍 ' + loc, W / 2, 80)
-        }
-        ctx.fillStyle = '#1B2232'
-        ctx.font = 'bold 50px Arial'
-        ctx.textBaseline = 'top'
-        ctx.fillText('now accepts', W / 2, 594)
-        ctx.fillStyle = '#F97316'
-        ctx.font = 'bold 70px Arial'
-        ctx.fillText('Bitcoin  ₿', W / 2, 652)
-        ctx.fillStyle = '#4A5A72'
-        ctx.font = '26px Arial'
-        ctx.fillText(s1, W / 2, 748)
-        if (s2) {
-          ctx.fillStyle = '#8A9BB5'
-          ctx.font = '22px Arial'
-          ctx.fillText(s2, W / 2, 784)
-        }
-        ctx.fillStyle = '#FFFFFF'
-        ctx.font = '19px Arial'
-        ctx.textBaseline = 'middle'
-        ctx.fillText('Bitcoin Abuja  ·  Powered by Fedi', W / 2, H - 58)
+
+        ctx.fillStyle = 'rgba(255,255,255,0.96)'
+        rrect(ctx, rightX - 18, 70, rightW, 430, 28)
+        ctx.fill()
+
+        if (btcImg) ctx.drawImage(btcImg, 72, 58, 198, 56)
+        if (fediImg) ctx.drawImage(fediImg, W - 160, 58, 120, 36)
+
         ctx.textAlign = 'left'
         ctx.textBaseline = 'top'
-        if (btcImg) ctx.drawImage(btcImg, (W - 180) / 2, 118, 180, 46)
-        if (fediImg) ctx.drawImage(fediImg, W - 108, H - 46, 88, 26)
+
+        ctx.fillStyle = '#D4A843'
+        ctx.font = '700 22px Satoshi, Arial'
+        ctx.fillText('BITCOIN MERCHANT SIGNAGE', leftX, 120)
+
+        ctx.fillStyle = '#EDF2FF'
+        ctx.font = '900 60px Satoshi, Arial'
+        wrapText(ctx, name, leftX, 162, 560, 64, 2)
+
+        ctx.fillStyle = '#F97316'
+        ctx.font = '900 44px Satoshi, Arial'
+        ctx.fillText('Accepts Bitcoin', leftX, 300)
+
+        ctx.fillStyle = '#2DD4BF'
+        ctx.font = '700 22px Satoshi, Arial'
+        ctx.fillText('Lightning payments. Instant settlement.', leftX, 360)
+
+        ctx.fillStyle = '#8A9BB5'
+        ctx.font = '500 21px Satoshi, Arial'
+        if (loc) ctx.fillText('📍 ' + loc, leftX, 404)
+
+        ctx.fillStyle = '#EDF2FF'
+        ctx.font = '600 20px Satoshi, Arial'
+        ctx.fillText(catEmoji + '  ' + catLabel, leftX, 440)
+
+        ctx.fillStyle = '#8A9BB5'
+        ctx.font = '500 18px Satoshi, Arial'
+        wrapText(ctx, s1, leftX, 472, 560, 22, 2)
+        if (s2) {
+          ctx.fillText(s2, leftX, 500)
+        }
+
+        ctx.fillStyle = 'rgba(255,255,255,0.96)'
+        rrect(ctx, rightX, 116, 312, 312, 24)
+        ctx.fill()
+
+        ctx.fillStyle = '#0B1220'
+        ctx.font = '700 18px Satoshi, Arial'
+        ctx.textAlign = 'center'
+        ctx.fillText('Scan to pay', rightX + 156, 136)
+
+        if (qrImg) ctx.drawImage(qrImg, rightX + 40, 168, 232, 232)
+
+        ctx.fillStyle = '#8A9BB5'
+        ctx.font = '500 14px Satoshi, Arial'
+        ctx.fillText('Bitcoin Abuja', rightX + 156, 414)
+
+        ctx.fillStyle = '#2DD4BF'
+        ctx.font = '700 14px Satoshi, Arial'
+        ctx.fillText('No POS needed', rightX + 156, 436)
+
+        if (fediImg) ctx.drawImage(fediImg, 72, H - 56, 108, 32)
+        ctx.fillStyle = '#EDF2FF'
+        ctx.font = '500 15px Satoshi, Arial'
+        ctx.textAlign = 'right'
+        ctx.fillText('sabibtc.vercel.app', W - 70, H - 44)
+      } else {
+        const heroX = 70
+        const heroY = 68
+
+        ctx.fillStyle = 'rgba(255,255,255,0.04)'
+        rrect(ctx, 44, 44, W - 88, H - 88, 30)
+        ctx.fill()
+
+        if (btcImg) ctx.drawImage(btcImg, 68, 56, 180, 50)
+
+        ctx.fillStyle = '#D4A843'
+        ctx.font = '700 24px Satoshi, Arial'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'top'
+        ctx.fillText('BITCOIN ACCEPTED HERE', W / 2, heroY + 18)
+
+        ctx.fillStyle = '#EDF2FF'
+        ctx.font = '900 66px Satoshi, Arial'
+        wrapText(ctx, name, W / 2, 120, 900, 72, 2)
+
+        ctx.fillStyle = '#F97316'
+        ctx.font = '900 56px Satoshi, Arial'
+        ctx.fillText('Bitcoin Lightning', W / 2, 250)
+
+        ctx.fillStyle = '#8A9BB5'
+        ctx.font = '500 22px Satoshi, Arial'
+        ctx.fillText(loc || 'Abuja, Nigeria', W / 2, 324)
+
+        ctx.fillStyle = '#2DD4BF'
+        ctx.font = '700 22px Satoshi, Arial'
+        ctx.fillText(catEmoji + ' ' + catLabel, W / 2, 360)
+
+        ctx.fillStyle = 'rgba(255,255,255,0.96)'
+        rrect(ctx, 140, 430, 800, 400, 32)
+        ctx.fill()
+
+        ctx.fillStyle = '#0B1220'
+        ctx.font = '700 18px Satoshi, Arial'
+        ctx.fillText('Scan to pay', W / 2, 452)
+
+        if (qrImg) ctx.drawImage(qrImg, 400, 488, 280, 280)
+
+        ctx.fillStyle = '#8A9BB5'
+        ctx.font = '500 18px Satoshi, Arial'
+        ctx.fillText('Bitcoin Abuja • Powered by Fedi', W / 2, 790)
+
+        ctx.fillStyle = '#D4A843'
+        ctx.font = '700 18px Satoshi, Arial'
+        ctx.fillText(s1, W / 2, 824)
+        if (s2) {
+          ctx.fillStyle = '#8A9BB5'
+          ctx.font = '500 15px Satoshi, Arial'
+          ctx.fillText(s2, W / 2, 852)
+        }
+
+        if (fediImg) ctx.drawImage(fediImg, W / 2 - 60, H - 58, 120, 34)
       }
-      setBannerReady(true)
+
+      if (!cancelled) setBannerReady(true)
     }
 
-    let loadCount = 0
-    const fediImg = new Image()
-    const btcImg = new Image()
+    drawBanner().catch(() => {
+      if (!cancelled) setBannerReady(true)
+    })
 
-    const onLoad = () => {
-      loadCount++
-      if (loadCount >= 2) {
-        const qrImg = new Image()
-        qrImg.onload = () => drawAll(qrImg, fediImg, btcImg)
-        qrImg.onerror = () => drawAll(null, fediImg, btcImg)
-        qrImg.src = qrData
-      }
+    return () => {
+      cancelled = true
     }
-
-    fediImg.onload = onLoad
-    fediImg.onerror = onLoad
-    btcImg.onload = onLoad
-    btcImg.onerror = onLoad
-    fediImg.src = '/fedi-logo-dark.png'
-    btcImg.src = '/bitcoin-abuja-logo.png'
   }, [phase, bannerMode, qrData, shopName, shopLocation, shopCategory, bannerLang])
 
-  if (phase === 'sharecard') return <ShareCard type="merchant" shopName={shopName} shopCategory={shopCategory} onClose={onBack} />
+  if (phase === 'sharecard') return <ShareCard type="merchant" shopName={shopName} shopCategory={shopCategory} community={community} onClose={onBack} />
 
   if (phase === 'banner') {
     return (
@@ -1584,7 +1655,7 @@ function MerchantOnboarding({ onBack, community }) {
             ))}
           </div>
 
-          <div style={{ borderRadius: 14, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,.5)', background: B.navyL, minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ borderRadius: 18, overflow: 'hidden', boxShadow: '0 16px 40px rgba(0,0,0,.45)', background: '#0B1220', minHeight: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {!bannerReady && <div style={{ color: B.mid, fontSize: 13, padding: 20 }}>Generating banner...</div>}
             <canvas ref={canvasRef} style={{ width: '100%', height: 'auto', display: bannerReady ? 'block' : 'none' }} />
           </div>
@@ -1594,7 +1665,7 @@ function MerchantOnboarding({ onBack, community }) {
               <div style={{ display: 'flex', gap: 10 }}>
                 <button
                   className="dl-btn"
-                  style={{ background: `linear-gradient(135deg,${B.gold},${B.goldD})`, color: '#0D0A00', boxShadow: '0 3px 16px rgba(212,168,67,.4)' }}
+                  style={{ background: `linear-gradient(135deg,${B.gold},${B.goldD})`, color: '#0D0A00', boxShadow: '0 3px 16px rgba(212,168,67,.35)' }}
                   onClick={() => {
                     const n = (shopName || 'merchant').toLowerCase().replace(/[^a-z0-9]/g, '-')
                     const a = document.createElement('a')
@@ -1644,12 +1715,12 @@ function MerchantOnboarding({ onBack, community }) {
         <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('lang')} />
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ background: B.navyL, borderRadius: 20, padding: 20, border: `1px solid ${B.tealB}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: B.white, textAlign: 'center', lineHeight: 1.5 }}>Upload your Fedi payment QR</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: B.white, textAlign: 'center', lineHeight: 1.5 }}>Upload your Fedi payment QR</div>
             <div style={{ fontSize: 13, color: B.mid, textAlign: 'center', lineHeight: 1.65 }}>Open Fedi → Wallet tab → Receive → screenshot that screen → upload here.</div>
             {!qrData ? (
               <div className="upload-area" onClick={() => document.getElementById('merQR').click()}>
                 <div style={{ fontSize: 36 }}>📸</div>
-                <div style={{ fontSize: 14, color: B.teal, fontWeight: 600, textAlign: 'center' }}>Tap to upload your QR screenshot</div>
+                <div style={{ fontSize: 14, color: B.teal, fontWeight: 700, textAlign: 'center' }}>Tap to upload your QR screenshot</div>
                 <div style={{ fontSize: 11, color: B.dim, textAlign: 'center' }}>JPEG or PNG from your camera roll</div>
               </div>
             ) : (
@@ -1690,7 +1761,7 @@ function MerchantOnboarding({ onBack, community }) {
                 border: 'none',
                 background: qrData ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
                 color: qrData ? '#0D1A1A' : B.dim,
-                fontWeight: 700,
+                fontWeight: 800,
                 fontSize: 15,
                 cursor: qrData ? 'pointer' : 'default',
                 fontFamily: 'inherit',
@@ -1711,7 +1782,7 @@ function MerchantOnboarding({ onBack, community }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('location')} />
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: B.white, marginBottom: 4 }}>Choose your banner language</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white, marginBottom: 4 }}>Choose your banner language</div>
           {[
             { key: 'en', title: 'English only', sub: '"now accepts Bitcoin · Scan to pay"' },
             { key: 'en-ha', title: 'English + Hausa', sub: '"now accepts Bitcoin · Muna karbar Bitcoin"' },
@@ -1736,7 +1807,7 @@ function MerchantOnboarding({ onBack, community }) {
                 width: '100%',
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 600, color: B.white, marginBottom: 3 }}>{o.title}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: B.white, marginBottom: 3 }}>{o.title}</div>
               <div style={{ fontSize: 11.5, color: B.dim }}>{o.sub}</div>
             </button>
           ))}
@@ -1750,7 +1821,7 @@ function MerchantOnboarding({ onBack, community }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('category')} />
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: B.white }}>Where is your shop located?</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white }}>Where is your shop located?</div>
           <div style={{ fontSize: 13, color: B.mid }}>This helps customers find you on BTCMap.</div>
           <input
             value={shopLocation}
@@ -1766,7 +1837,7 @@ function MerchantOnboarding({ onBack, community }) {
               border: 'none',
               background: shopLocation.trim() ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
               color: shopLocation.trim() ? '#0D1A1A' : B.dim,
-              fontWeight: 600,
+              fontWeight: 700,
               fontSize: 15,
               cursor: shopLocation.trim() ? 'pointer' : 'default',
               fontFamily: 'inherit',
@@ -1790,12 +1861,12 @@ function MerchantOnboarding({ onBack, community }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('name')} />
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: B.white }}>What type of business is this?</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white }}>What type of business is this?</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             {BUSINESS_CATEGORIES.map(c => (
               <button key={c.id} className={`cat-btn${shopCategory === c.id ? ' selected' : ''}`} onClick={() => setShopCategory(c.id)}>
                 <div style={{ fontSize: 22, marginBottom: 6 }}>{c.emoji}</div>
-                <div style={{ fontSize: 12.5, fontWeight: 500, color: B.white, lineHeight: 1.3 }}>{c.label}</div>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: B.white, lineHeight: 1.3 }}>{c.label}</div>
               </button>
             ))}
           </div>
@@ -1808,7 +1879,7 @@ function MerchantOnboarding({ onBack, community }) {
               border: 'none',
               background: shopCategory ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
               color: shopCategory ? '#0D1A1A' : B.dim,
-              fontWeight: 600,
+              fontWeight: 700,
               fontSize: 15,
               cursor: shopCategory ? 'pointer' : 'default',
               fontFamily: 'inherit',
@@ -1827,7 +1898,7 @@ function MerchantOnboarding({ onBack, community }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={onBack} />
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: B.white }}>What is your shop or business name?</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white }}>What is your shop or business name?</div>
           <input
             value={shopName}
             onChange={e => setShopName(e.target.value)}
@@ -1842,7 +1913,7 @@ function MerchantOnboarding({ onBack, community }) {
               border: 'none',
               background: shopName.trim() ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
               color: shopName.trim() ? '#0D1A1A' : B.dim,
-              fontWeight: 600,
+              fontWeight: 700,
               fontSize: 15,
               cursor: shopName.trim() ? 'pointer' : 'default',
               fontFamily: 'inherit',
@@ -1862,7 +1933,7 @@ function MerchantOnboarding({ onBack, community }) {
   }
 
   if (phase === 'join') {
-    return <JoinCommunityScreen community={community} onDone={() => { popPhase(); setStep(p => p + 1) }} onBack={popPhase} titleColor={B.teal} title="Merchant Setup" />
+    return <JoinCommunityScreen community={community} onDone={() => { setPhase('steps'); setStep(p => p + 1) }} onBack={() => setPhase('steps')} titleColor={B.teal} title="Merchant Setup" />
   }
 
   return (
@@ -1896,7 +1967,7 @@ function MemberOnboarding({ onBack, community }) {
       } else {
         setStep(p => p + 1)
       }
-    }, 1000)
+    }, 900)
   }
 
   const handleNo = action => {
@@ -1911,7 +1982,7 @@ function MemberOnboarding({ onBack, community }) {
     setFeedback('no')
   }
 
-  if (phase === 'sharecard') return <ShareCard type="member" onClose={onBack} />
+  if (phase === 'sharecard') return <ShareCard type="member" community={community} onClose={onBack} />
 
   if (phase === 'done') {
     return (
@@ -1920,12 +1991,12 @@ function MemberOnboarding({ onBack, community }) {
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className="done-pop" style={{ background: B.navyL, border: `1px solid ${B.orangeB}`, borderRadius: 20, padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center' }}>
             <div style={{ fontSize: 52 }}>₿</div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: B.orange, lineHeight: 1.3 }}>Welcome to {community.name}!</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: B.orange, lineHeight: 1.3 }}>Welcome to {community.name}!</div>
             <div style={{ fontSize: 13, color: B.mid, lineHeight: 1.65, maxWidth: 280 }}>You are now part of a real Bitcoin circular economy in Nigeria. Your sats are yours — no bank, no middleman.</div>
           </div>
 
           <div style={{ background: B.navy, border: '1px solid rgba(212,168,67,.2)', borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 11, color: B.gold, fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase' }}>🎁 100 Free Sats Waiting</div>
+            <div style={{ fontSize: 11, color: B.gold, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>🎁 100 Free Sats Waiting</div>
             <div style={{ fontSize: 13.5, color: B.white, lineHeight: 1.6 }}>
               The {community.name} Sats Faucet has 100 free sats for new members. This is your first real Bitcoin — proof of ownership. Stack more via Cashwyre when you are ready. Even 500 Naira a week adds up significantly over time.
             </div>
@@ -1939,7 +2010,7 @@ function MemberOnboarding({ onBack, community }) {
                 border: 'none',
                 background: `linear-gradient(135deg,${B.gold},${B.goldD})`,
                 color: '#0D0A00',
-                fontWeight: 700,
+                fontWeight: 800,
                 fontSize: 14,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
@@ -1960,7 +2031,7 @@ function MemberOnboarding({ onBack, community }) {
               border: 'none',
               background: `linear-gradient(135deg,${B.orange},#c2610f)`,
               color: 'white',
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: 14,
               cursor: 'pointer',
               fontFamily: 'inherit',
@@ -2023,7 +2094,7 @@ function MemberOnboarding({ onBack, community }) {
         <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className="card-slide" key={learnStep} style={{ background: B.navyL, border: `1px solid ${B.purpleB}`, borderRadius: 20, padding: 22, display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ fontSize: 36 }}>{card.icon}</div>
-            <div style={{ fontSize: 17, fontWeight: 700, color: B.white, lineHeight: 1.3 }}>{card.title}</div>
+            <div style={{ fontSize: 17, fontWeight: 900, color: B.white, lineHeight: 1.3 }}>{card.title}</div>
             <div style={{ fontSize: 13.5, color: B.mid, lineHeight: 1.75 }}>{card.body}</div>
             <div style={{ background: B.purpleF, border: `1px solid ${B.purpleB}`, borderRadius: 12, padding: '13px 15px', fontSize: 13, color: B.purple, lineHeight: 1.6 }}>
               {card.highlight}
@@ -2053,7 +2124,7 @@ function MemberOnboarding({ onBack, community }) {
                 border: 'none',
                 background: `linear-gradient(135deg,${B.orange},#c2610f)`,
                 color: 'white',
-                fontWeight: 700,
+                fontWeight: 800,
                 fontSize: 15,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
@@ -2073,7 +2144,7 @@ function MemberOnboarding({ onBack, community }) {
                 border: 'none',
                 background: `linear-gradient(135deg,${B.purple},#7c3aed)`,
                 color: 'white',
-                fontWeight: 700,
+                fontWeight: 800,
                 fontSize: 15,
                 cursor: 'pointer',
                 fontFamily: 'inherit',
@@ -2106,7 +2177,7 @@ function MemberOnboarding({ onBack, community }) {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <SubHeader title="New Member Setup" titleColor={B.orange} onBack={onBack} />
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontSize: 16, fontWeight: 700, color: B.white, lineHeight: 1.4, marginBottom: 4 }}>What brings you to {community.name}?</div>
+        <div style={{ fontSize: 16, fontWeight: 900, color: B.white, lineHeight: 1.4, marginBottom: 4 }}>What brings you to {community.name}?</div>
         <div style={{ fontSize: 13, color: B.mid, lineHeight: 1.6, marginBottom: 8 }}>
           Choose what matters most to you. We will show you exactly why Bitcoin is the right tool — then get you set up.
         </div>
@@ -2146,7 +2217,7 @@ function MemberOnboarding({ onBack, community }) {
           >
             <div style={{ fontSize: 26, flexShrink: 0, marginTop: 2 }}>{c.icon}</div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: B.white, lineHeight: 1.3, marginBottom: 4 }}>{c.label}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: B.white, lineHeight: 1.3, marginBottom: 4 }}>{c.label}</div>
               <div style={{ fontSize: 11.5, color: B.mid, lineHeight: 1.4 }}>{c.sub}</div>
             </div>
           </button>
@@ -2179,6 +2250,9 @@ export default function App() {
   const messagesEndRef = useRef(null)
   const fileInputRef = useRef(null)
   const recognitionRef = useRef(null)
+  const mediaRecorderRef = useRef(null)
+  const mediaChunksRef = useRef([])
+  const audioPlayerRef = useRef(null)
 
   const satNgn = btc ? (btc.ngn / 100000000).toFixed(2) : '1.54'
   const welcome = WELCOME_BY_LANG[activeLang] || WELCOME_BY_LANG.en
@@ -2187,7 +2261,7 @@ export default function App() {
   useEffect(() => {
     fetchBTC().then(setBtc)
     const iv = setInterval(() => fetchBTC().then(setBtc), 180000)
-    if (window.SpeechRecognition || window.webkitSpeechRecognition) setVS(true)
+    if (window.MediaRecorder) setVS(true)
     return () => clearInterval(iv)
   }, [])
 
@@ -2195,48 +2269,109 @@ export default function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [displayMsgs, isLoading])
 
-  const startRecording = useCallback(() => {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SR) {
-      setMicError('Voice not supported on this browser.')
+  const stopSpeaking = () => {
+    window.speechSynthesis?.cancel()
+
+    if (audioPlayerRef.current) {
+      try {
+        audioPlayerRef.current.pause()
+        audioPlayerRef.current.currentTime = 0
+        if (audioPlayerRef.current.__objectUrl) URL.revokeObjectURL(audioPlayerRef.current.__objectUrl)
+      } catch (e) {}
+      audioPlayerRef.current = null
+    }
+
+    setIsSpeaking(false)
+  }
+
+  const playAssistantAudio = useCallback(async audioBase64 => {
+    if (!audioBase64) return false
+
+    try {
+      stopSpeaking()
+      const audio = createAudioFromBase64(audioBase64)
+      if (!audio) return false
+
+      audioPlayerRef.current = audio
+      setIsSpeaking(true)
+
+      audio.onended = () => {
+        setIsSpeaking(false)
+        if (audio.__objectUrl) URL.revokeObjectURL(audio.__objectUrl)
+        if (audioPlayerRef.current === audio) audioPlayerRef.current = null
+      }
+
+      audio.onerror = () => {
+        setIsSpeaking(false)
+        if (audio.__objectUrl) URL.revokeObjectURL(audio.__objectUrl)
+        if (audioPlayerRef.current === audio) audioPlayerRef.current = null
+      }
+
+      await audio.play()
+      return true
+    } catch (e) {
+      setIsSpeaking(false)
+      return false
+    }
+  }, [])
+
+  const startRecording = useCallback(async () => {
+    if (!window.MediaRecorder || !navigator.mediaDevices?.getUserMedia) {
+      setMicError('Voice recording is not supported on this browser.')
       return
     }
+
     setMicError('')
-    const go = () => {
-      const r = new SR()
-      r.lang = { en: 'en-NG', ha: 'ha', yo: 'yo', ig: 'ig', pc: 'en-NG' }[activeLang] || 'en-NG'
-      r.continuous = false
-      r.interimResults = false
-      r.onstart = () => setIsRecording(true)
-      r.onresult = e => {
-        const t = Array.from(e.results).map(x => x[0].transcript).join('')
-        setInputText(t)
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+
+      mediaRecorderRef.current = recorder
+      mediaChunksRef.current = []
+
+      recorder.ondataavailable = e => {
+        if (e.data && e.data.size > 0) mediaChunksRef.current.push(e.data)
       }
-      r.onspeechend = () => r.stop()
-      r.onend = () => {
+
+      recorder.onstop = async () => {
         setIsRecording(false)
-        recognitionRef.current = null
+        stream.getTracks().forEach(track => track.stop())
+
+        try {
+          const blob = new Blob(mediaChunksRef.current, { type: recorder.mimeType || 'audio/webm' })
+          if (!blob.size) {
+            setMicError('No audio detected. Try again.')
+            return
+          }
+
+          setMicError('Transcribing...')
+          const text = await transcribeAudioBlob(blob)
+          if (text.trim()) {
+            setInputText(text.trim())
+            setMicError('')
+          } else {
+            setMicError('No speech detected. Try again.')
+          }
+        } catch (err) {
+          setMicError('Transcription failed. Please type instead.')
+        }
       }
-      r.onerror = e => {
-        setIsRecording(false)
-        recognitionRef.current = null
-        if (e.error === 'not-allowed') setMicError('Microphone blocked. Allow mic in browser settings.')
-        else setMicError('Voice error. Please type instead.')
-      }
-      recognitionRef.current = r
-      try {
-        r.start()
-      } catch (e) {
-        setMicError('Could not start voice.')
-      }
+
+      recorder.start()
+      setIsRecording(true)
+    } catch (err) {
+      setMicError('Microphone access denied or blocked.')
     }
-    if (navigator.mediaDevices?.getUserMedia) navigator.mediaDevices.getUserMedia({ audio: true }).then(go).catch(() => setMicError('Microphone access denied.'))
-    else go()
-  }, [activeLang])
+  }, [])
 
   const stopRecording = useCallback(() => {
-    recognitionRef.current?.stop()
-    setIsRecording(false)
+    const recorder = mediaRecorderRef.current
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.stop()
+    } else {
+      setIsRecording(false)
+    }
   }, [])
 
   const toggleMic = useCallback(() => {
@@ -2266,6 +2401,7 @@ export default function App() {
       setMode('member')
       return
     }
+
     const file = attachedFile
     if (!text && !file) return
     if (isLoading) return
@@ -2295,11 +2431,10 @@ export default function App() {
       const { text: reply, audio } = await sendToAI(newHistory, btc, activeLang, community)
       logConversation(activeLang, community.id)
       setMessages(p => [...p, { role: 'assistant', content: [{ type: 'text', text: reply }] }])
-      setDisplayMsgs(p => [...p, { r: 'bot', c: reply }])
+      setDisplayMsgs(p => [...p, { r: 'bot', c: reply, audio }])
+
       if (audio) {
-        setIsSpeaking(true)
-        await speakElevenLabs(audio)
-        setTimeout(() => setIsSpeaking(false), 500)
+        await playAssistantAudio(audio)
       } else if (activeLang !== 'en' && activeLang !== 'pc') {
         setIsSpeaking(true)
         speakDevice(reply, activeLang)
@@ -2326,13 +2461,9 @@ export default function App() {
     }
   }
 
-  const stopSpeaking = () => {
-    window.speechSynthesis?.cancel()
-    setIsSpeaking(false)
-  }
-
   const hasMessages = displayMsgs.length > 0
   const langLabels = { en: 'EN', ha: 'HA', yo: 'YO', ig: 'IG', pc: 'PID' }
+
   const wrap = children => (
     <div style={{ background: B.navy, minHeight: '100dvh', maxWidth: 440, margin: '0 auto', fontFamily: "'Satoshi',-apple-system,sans-serif", color: B.white, display: 'flex', flexDirection: 'column' }}>
       <style>{CSS}</style>
@@ -2386,7 +2517,7 @@ export default function App() {
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
           {!hasMessages && !isLoading && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '28px 20px 20px' }}>
-              <h1 className="w1" style={{ fontSize: 24, fontWeight: 700, color: B.white, textAlign: 'center', marginBottom: 10 }}>
+              <h1 className="w1" style={{ fontSize: 24, fontWeight: 900, color: B.white, textAlign: 'center', marginBottom: 10 }}>
                 {welcome.greeting}
               </h1>
               <p className="w2" style={{ fontSize: 14, color: B.mid, textAlign: 'center', lineHeight: 1.65, marginBottom: 6, maxWidth: 290 }}>
@@ -2418,7 +2549,7 @@ export default function App() {
                       }}
                     >
                       <div style={{ width: 20, height: 3, borderRadius: 2, background: isMer ? B.teal : isMem ? B.orange : i % 2 === 0 ? B.gold : B.goldD, marginBottom: 12 }} />
-                      <div style={{ fontSize: 13, fontWeight: 400, color: B.white, lineHeight: 1.4 }}>{p.label}</div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: B.white, lineHeight: 1.4 }}>{p.label}</div>
                     </button>
                   )
                 })}
@@ -2426,7 +2557,7 @@ export default function App() {
               {voiceSupported && (
                 <div className="w4" style={{ marginTop: 16, display: 'flex', alignItems: 'center', gap: 6, color: B.dim, fontSize: 11 }}>
                   <Icons.Mic />
-                  <span>Speak in any language — Sabi understands you</span>
+                  <span>Speak into the mic — Sabi will transcribe you</span>
                 </div>
               )}
             </div>
@@ -2449,7 +2580,7 @@ export default function App() {
                           whiteSpace: 'pre-wrap',
                           fontFamily: 'inherit',
                           ...(msg.r === 'user'
-                            ? { background: `linear-gradient(135deg,${B.gold},${B.goldD})`, color: '#0D0A00', fontWeight: 600, borderRadius: '18px 18px 4px 18px', boxShadow: '0 3px 14px rgba(212,168,67,.3)' }
+                            ? { background: `linear-gradient(135deg,${B.gold},${B.goldD})`, color: '#0D0A00', fontWeight: 700, borderRadius: '18px 18px 4px 18px', boxShadow: '0 3px 14px rgba(212,168,67,.3)' }
                             : { background: B.navyL, color: B.white, borderRadius: '18px 18px 18px 4px', border: `1px solid ${B.navyB}` }),
                         }}
                       >
@@ -2465,6 +2596,27 @@ export default function App() {
                           </div>
                         )}
                         {msg.c}
+                        {msg.r !== 'user' && msg.audio && (
+                          <button
+                            onClick={() => playAssistantAudio(msg.audio)}
+                            style={{
+                              marginTop: 10,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              background: 'rgba(45,212,191,.1)',
+                              border: `1px solid ${B.tealB}`,
+                              color: B.teal,
+                              borderRadius: 999,
+                              padding: '6px 10px',
+                              fontSize: 11,
+                              cursor: 'pointer',
+                              fontFamily: 'inherit',
+                            }}
+                          >
+                            <Icons.Speaker /> Listen
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2492,10 +2644,10 @@ export default function App() {
           {isRecording && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px 12px', background: B.goldF, border: `1px solid ${B.goldB}`, borderRadius: 12 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: B.gold, animation: 'pulse 1s ease-in-out infinite' }} />
-              <span style={{ fontSize: 12, color: B.gold, fontWeight: 500 }}>Listening… tap mic to stop</span>
+              <span style={{ fontSize: 12, color: B.gold, fontWeight: 600 }}>{micError === 'Transcribing...' ? 'Transcribing...' : 'Listening… tap mic to stop'}</span>
             </div>
           )}
-          {micError && (
+          {micError && micError !== 'Transcribing...' && (
             <div style={{ marginBottom: 8, padding: '8px 12px', background: B.redF, border: `1px solid ${B.redB}`, borderRadius: 12 }}>
               <span style={{ fontSize: 12, color: B.red }}>{micError}</span>
             </div>
@@ -2561,3 +2713,4 @@ export default function App() {
     </>
   )
 }
+
