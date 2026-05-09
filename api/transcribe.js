@@ -22,13 +22,10 @@ export default async function handler(req, res) {
     }
 
     const audioBuffer = Buffer.from(audioBase64, 'base64')
+
     const form = new FormData()
     form.append('model_id', 'scribe_v2')
-    form.append(
-      'file',
-      new Blob([audioBuffer], { type: mimeType }),
-      'recording.webm'
-    )
+    form.append('file', new Blob([audioBuffer], { type: mimeType }), mimeType.includes('mp4') ? 'recording.mp4' : 'recording.webm')
 
     const sttRes = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
       method: 'POST',
