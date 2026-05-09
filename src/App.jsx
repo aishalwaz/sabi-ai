@@ -64,6 +64,17 @@ function blobToBase64(blob) {
   })
 }
 
+function pickRecorderMimeType() {
+  if (!window.MediaRecorder?.isTypeSupported) return ''
+  const options = [
+    'audio/mp4',
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/ogg;codecs=opus',
+  ]
+  return options.find(type => window.MediaRecorder.isTypeSupported(type)) || ''
+}
+
 async function transcribeAudioBlob(blob) {
   const audioBase64 = await blobToBase64(blob)
   const response = await fetch('/api/transcribe', {
@@ -75,12 +86,8 @@ async function transcribeAudioBlob(blob) {
     }),
   })
 
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}))
-    throw new Error(data.error || 'Transcription failed')
-  }
-
-  const data = await response.json()
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(data.error || 'Transcription failed')
   return data.text || ''
 }
 
@@ -198,31 +205,11 @@ const PROMPTS_BY_LANG = {
 }
 
 const WELCOME_BY_LANG = {
-  en: {
-    greeting: 'How can I help you?',
-    sub: 'Ask, learn, or start using Bitcoin in your language.',
-    langs: 'English · Hausa · Yoruba · Igbo · Pidgin',
-  },
-  ha: {
-    greeting: 'Ina iya taimaka maka?',
-    sub: 'Tambaya, koya, ko fara amfani da Bitcoin a harshenka.',
-    langs: 'Hausa · English · Yoruba · Igbo · Pidgin',
-  },
-  yo: {
-    greeting: 'Bawo ni mo se le ran o lowo?',
-    sub: 'Beere, ko eko, tabi bere fun lilo Bitcoin ni ede re.',
-    langs: 'Yoruba · Hausa · English · Igbo · Pidgin',
-  },
-  ig: {
-    greeting: 'Kedu ka m ga-esi nyere gi aka?',
-    sub: 'Jụọ, mụta, ma ọ bụ bido iji Bitcoin n’asụsụ gị.',
-    langs: 'Igbo · Hausa · Yoruba · English · Pidgin',
-  },
-  pc: {
-    greeting: 'How I fit help you?',
-    sub: 'Ask, learn, or start to use Bitcoin for your side.',
-    langs: 'Pidgin · Hausa · Yoruba · Igbo · English',
-  },
+  en: { greeting: 'How can I help you?', sub: 'Ask, learn, or start using Bitcoin in your language.', langs: 'English · Hausa · Yoruba · Igbo · Pidgin' },
+  ha: { greeting: 'Ina iya taimaka maka?', sub: 'Tambaya, koya, ko fara amfani da Bitcoin a harshenka.', langs: 'Hausa · English · Yoruba · Igbo · Pidgin' },
+  yo: { greeting: 'Bawo ni mo se le ran o lowo?', sub: 'Beere, ko eko, tabi bere fun lilo Bitcoin ni ede re.', langs: 'Yoruba · Hausa · English · Igbo · Pidgin' },
+  ig: { greeting: 'Kedu ka m ga-esi nyere gi aka?', sub: 'Jụọ, mụta, ma ọ bụ bido iji Bitcoin n’asụsụ gị.', langs: 'Igbo · Hausa · Yoruba · English · Pidgin' },
+  pc: { greeting: 'How I fit help you?', sub: 'Ask, learn, or start to use Bitcoin for your side.', langs: 'Pidgin · Hausa · Yoruba · Igbo · English' },
 }
 
 const ERROR_BY_LANG = {
@@ -391,11 +378,10 @@ const MEMBER_STEPS = [
     no: 'Open Fedi → Profile → Personal Backup → write every word on paper.',
   },
 ]
-
 async function sendToAI(history, btc, activeLang, community) {
   const satN = btc ? (btc.ngn / 100000000).toFixed(2) : '1.54'
   const usd = btc ? btc.usd.toLocaleString() : '96,300'
-  const ngnM = btc ? btc.ngn / 1000000 : 154
+  const ngnM = btc ? (btc.ngn / 1000000).toFixed(0) : '154'
   const system =
     'You are Sabi — the AI Bitcoin guide for ' +
     community.name +
@@ -409,7 +395,7 @@ async function sendToAI(history, btc, activeLang, community) {
     ' Naira. 1 Bitcoin = $' +
     usd +
     ' = ' +
-    ngnM.toFixed(0) +
+    ngnM +
     'M Naira. Always mention sats and full Bitcoin together when discussing price. ' +
     'TO BUY BITCOIN: Fedi — Mini Apps — Cashwyre — Crypto Onramp — NGN — transfer from any Nigerian bank — wait 5-10 minutes. No ID needed. ' +
     'TO ACCEPT BITCOIN AT SHOP: Fedi — Wallet tab — Receive — show QR to customer — they scan — instant payment — convert to Naira via Cashwyre anytime. ' +
@@ -427,6 +413,7 @@ async function sendToAI(history, btc, activeLang, community) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages: history, system, language: activeLang, tts: true, communityId: community.id }),
   })
+
   if (!response.ok) throw new Error('API ' + response.status)
   const data = await response.json()
   if (data.error) throw new Error(data.error)
@@ -621,34 +608,11 @@ const inputStyle = {
 
 function SubHeader({ title, titleColor, onBack, rightSlot = null }) {
   return (
-    <div
-      style={{
-        padding: '12px 16px',
-        background: B.navyL,
-        borderBottom: `1px solid ${B.navyB}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 12,
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
-      }}
-    >
+    <div style={{ padding: '12px 16px', background: B.navyL, borderBottom: `1px solid ${B.navyB}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, position: 'sticky', top: 0, zIndex: 10 }}>
       <button className="back-btn" onClick={onBack}>
         <Icons.Back /> Back
       </button>
-      <div
-        style={{
-          fontSize: 13,
-          fontWeight: 700,
-          color: titleColor || B.white,
-          letterSpacing: 0.5,
-          textTransform: 'uppercase',
-          textAlign: 'center',
-          flex: 1,
-        }}
-      >
+      <div style={{ fontSize: 13, fontWeight: 700, color: titleColor || B.white, letterSpacing: 0.5, textTransform: 'uppercase', textAlign: 'center', flex: 1 }}>
         {title}
       </div>
       <div style={{ minWidth: 40, display: 'flex', justifyContent: 'flex-end' }}>{rightSlot}</div>
@@ -660,29 +624,11 @@ function Progress({ step, total, color }) {
   return (
     <div style={{ padding: '10px 16px 0' }}>
       <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
-        <div
-          style={{
-            height: '100%',
-            width: `${(step / total) * 100}%`,
-            background: `linear-gradient(90deg,${color},${B.gold})`,
-            borderRadius: 3,
-            transition: 'width 0.45s cubic-bezier(0.22,1,0.36,1)',
-          }}
-        />
+        <div style={{ height: '100%', width: `${(step / total) * 100}%`, background: `linear-gradient(90deg,${color},${B.gold})`, borderRadius: 3, transition: 'width 0.45s cubic-bezier(0.22,1,0.36,1)' }} />
       </div>
       <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 12 }}>
         {Array.from({ length: total }).map((_, i) => (
-          <div
-            key={i}
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: i < step ? color : i === step ? B.gold : 'rgba(255,255,255,0.08)',
-              boxShadow: i === step ? `0 0 8px ${B.gold}` : 'none',
-              transition: 'all 0.3s',
-            }}
-          />
+          <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: i < step ? color : i === step ? B.gold : 'rgba(255,255,255,0.08)', boxShadow: i === step ? `0 0 8px ${B.gold}` : 'none', transition: 'all 0.3s' }} />
         ))}
       </div>
     </div>
@@ -702,40 +648,21 @@ function SplashScreen({ onDone }) {
   }, [onDone])
 
   return (
-    <div
-      className={leaving ? 'splash-out' : ''}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 999,
-        background: B.navy,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
+    <div className={leaving ? 'splash-out' : ''} style={{ position: 'fixed', inset: 0, zIndex: 999, background: B.navy, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <img src="/logo.png" alt="Sabi AI" style={{ width: 280, maxWidth: '75vw', height: 'auto', objectFit: 'contain' }} />
     </div>
   )
 }
+
 function ShareCard({ type, shopName = '', shopCategory = '', community = COMMUNITIES['bitcoin-abuja'], onClose }) {
   const title = type === 'merchant' ? 'My shop accepts Bitcoin now' : 'I joined Bitcoin Abuja'
-  const subtitle =
-    type === 'merchant'
-      ? `${shopName || 'My shop'} is now ready for Bitcoin Lightning payments.`
-      : `I just joined ${community.name} on Fedi.`
+  const subtitle = type === 'merchant' ? `${shopName || 'My shop'} is now ready for Bitcoin Lightning payments.` : `I just joined ${community.name} on Fedi.`
   const emoji = type === 'merchant' ? (CAT_EMOJI[shopCategory] || '🏪') : '₿'
+  const shareText = type === 'merchant'
+    ? `${title}\n${subtitle}\nJoin Bitcoin Abuja on Fedi: ${community.communityLink}`
+    : `${title}\n${subtitle}\nJoin here: ${community.communityLink}`
 
-  const shareText =
-    type === 'merchant'
-      ? `${title}\n${subtitle}\nJoin Bitcoin Abuja on Fedi: ${community.communityLink}`
-      : `${title}\n${subtitle}\nJoin here: ${community.communityLink}`
-
-  const shareToX = () => {
-    const url = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}`
-    window.open(url, '_blank', 'noopener,noreferrer')
-  }
-
+  const shareToX = () => window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}`, '_blank', 'noopener,noreferrer')
   const copyText = async () => {
     try {
       await navigator.clipboard.writeText(shareText)
@@ -749,96 +676,31 @@ function ShareCard({ type, shopName = '', shopCategory = '', community = COMMUNI
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <SubHeader title="Share Card" titleColor={type === 'merchant' ? B.teal : B.orange} onBack={onClose} />
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div
-          style={{
-            background: `linear-gradient(180deg, ${B.navyL}, ${B.navy})`,
-            border: `1px solid ${type === 'merchant' ? B.tealB : B.orangeB}`,
-            borderRadius: 20,
-            padding: 22,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center',
-            gap: 12,
-          }}
-        >
+        <div style={{ background: `linear-gradient(180deg, ${B.navyL}, ${B.navy})`, border: `1px solid ${type === 'merchant' ? B.tealB : B.orangeB}`, borderRadius: 20, padding: 22, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 12 }}>
           <div style={{ fontSize: 42 }}>{emoji}</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: B.white, lineHeight: 1.25 }}>{title}</div>
           <div style={{ fontSize: 14, color: B.mid, lineHeight: 1.7 }}>{subtitle}</div>
           {type === 'merchant' && (
-            <div
-              style={{
-                marginTop: 4,
-                width: '100%',
-                padding: '12px 14px',
-                borderRadius: 12,
-                background: B.tealF,
-                border: `1px solid ${B.tealB}`,
-                color: B.teal,
-                fontSize: 12,
-                lineHeight: 1.6,
-              }}
-            >
+            <div style={{ marginTop: 4, width: '100%', padding: '12px 14px', borderRadius: 12, background: B.tealF, border: `1px solid ${B.tealB}`, color: B.teal, fontSize: 12, lineHeight: 1.6 }}>
               {shopName ? `${shopName} · ` : ''}Scan, pay, and settle with Bitcoin Lightning.
             </div>
           )}
           <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 8 }}>
-            <button
-              className="action-cta"
-              onClick={shareToX}
-              style={{
-                padding: 14,
-                borderRadius: 14,
-                border: 'none',
-                background: `linear-gradient(135deg, ${B.gold}, ${B.goldD})`,
-                color: '#0D0A00',
-                fontWeight: 800,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
-            >
+            <button className="action-cta" onClick={shareToX} style={{ padding: 14, borderRadius: 14, border: 'none', background: `linear-gradient(135deg, ${B.gold}, ${B.goldD})`, color: '#0D0A00', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
               Post to X
             </button>
-            <button
-              className="action-cta"
-              onClick={copyText}
-              style={{
-                padding: 14,
-                borderRadius: 14,
-                border: `1px solid ${B.navyB}`,
-                background: 'transparent',
-                color: B.white,
-                fontWeight: 700,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
-            >
+            <button className="action-cta" onClick={copyText} style={{ padding: 14, borderRadius: 14, border: `1px solid ${B.navyB}`, background: 'transparent', color: B.white, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
               Copy Text
             </button>
           </div>
         </div>
-
-        <button
-          onClick={onClose}
-          style={{
-            width: '100%',
-            padding: 12,
-            borderRadius: 14,
-            border: `1px solid ${B.navyB}`,
-            background: 'transparent',
-            color: B.mid,
-            fontSize: 13,
-            cursor: 'pointer',
-            fontFamily: 'inherit',
-          }}
-        >
+        <button onClick={onClose} style={{ width: '100%', padding: 12, borderRadius: 14, border: `1px solid ${B.navyB}`, background: 'transparent', color: B.mid, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
           Back
         </button>
       </div>
     </div>
   )
 }
-
 function CommunityRequestForm({ onBack }) {
   const [name, setName] = useState('')
   const [community, setCommunity] = useState('')
@@ -869,20 +731,10 @@ function CommunityRequestForm({ onBack }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <SubHeader title="Request Sent" titleColor={B.teal} onBack={onBack} />
         <div style={{ flex: 1, padding: '20px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div
-            style={{
-              background: B.navyL,
-              border: `1px solid ${B.tealB}`,
-              borderRadius: 20,
-              padding: 24,
-              textAlign: 'center',
-            }}
-          >
+          <div style={{ background: B.navyL, border: `1px solid ${B.tealB}`, borderRadius: 20, padding: 24, textAlign: 'center' }}>
             <div style={{ fontSize: 44, marginBottom: 10 }}>✓</div>
             <div style={{ fontSize: 20, fontWeight: 900, color: B.white, marginBottom: 8 }}>Request received</div>
-            <div style={{ fontSize: 14, color: B.mid, lineHeight: 1.7 }}>
-              Sabi can be adapted for your community.
-            </div>
+            <div style={{ fontSize: 14, color: B.mid, lineHeight: 1.7 }}>Sabi can be adapted for your community.</div>
           </div>
           <button
             onClick={onBack}
@@ -909,12 +761,8 @@ function CommunityRequestForm({ onBack }) {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <SubHeader title="Community Request" titleColor={B.purple} onBack={onBack} />
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontSize: 15, fontWeight: 900, color: B.white, lineHeight: 1.4 }}>
-          Bring Sabi to your community
-        </div>
-        <div style={{ fontSize: 13, color: B.mid, lineHeight: 1.7 }}>
-          Fill this in and it gets saved for follow-up.
-        </div>
+        <div style={{ fontSize: 15, fontWeight: 800, color: B.white, lineHeight: 1.4 }}>Bring Sabi to your community</div>
+        <div style={{ fontSize: 13, color: B.mid, lineHeight: 1.7 }}>Fill this in and it gets saved for follow-up.</div>
 
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" style={inputStyle} />
         <input value={community} onChange={e => setCommunity(e.target.value)} placeholder="Community name" style={inputStyle} />
@@ -974,6 +822,15 @@ function StatsView({ onBack, communityId = 'bitcoin-abuja' }) {
       .catch(() => setLoading(false))
   }, [communityId])
 
+  const languageCounts = (() => {
+    const lc = {}
+    data?.langData?.forEach(r => {
+      const l = r.language || 'en'
+      lc[l] = (lc[l] || 0) + 1
+    })
+    return lc
+  })()
+
   return (
     <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
       <SubHeader title="Impact Dashboard" titleColor={B.gold} onBack={onBack} />
@@ -1000,7 +857,7 @@ function StatsView({ onBack, communityId = 'bitcoin-abuja' }) {
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,${s.color},${s.color}66)` }} />
               <div style={{ fontSize: 9, color: B.mid, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>{s.label}</div>
               <div style={{ fontSize: 26, fontWeight: 900, color: s.color, letterSpacing: -1, marginBottom: 3 }}>{s.value}</div>
-              <div style={{ fontSize: 9, color: B.green, fontWeight: 500, lineHeight: 1.3 }}>{s.delta}</div>
+              <div style={{ fontSize: 9, color: B.green, fontWeight: 600, lineHeight: 1.3 }}>{s.delta}</div>
             </div>
           ))}
         </div>
@@ -1012,20 +869,15 @@ function StatsView({ onBack, communityId = 'bitcoin-abuja' }) {
           </div>
           {loading ? (
             <div style={{ fontSize: 12, color: B.dim, textAlign: 'center', padding: 8 }}>Loading...</div>
-          ) : (() => {
-              const lc = {}
-              data?.langData?.forEach(r => {
-                const l = r.language || 'en'
-                lc[l] = (lc[l] || 0) + 1
-              })
-              const total = Object.values(lc).reduce((a, b) => a + b, 0) || 1
-              const sorted = Object.entries(lc).sort((a, b) => b[1] - a[1])
-              if (!sorted.length) return <div style={{ fontSize: 12, color: B.dim, textAlign: 'center', padding: 8 }}>No data yet</div>
-              return sorted.map(([lang, count], i) => {
+          ) : Object.keys(languageCounts).length ? (
+            Object.entries(languageCounts)
+              .sort((a, b) => b[1] - a[1])
+              .map(([lang, count], i, arr) => {
+                const total = Object.values(languageCounts).reduce((a, b) => a + b, 0) || 1
                 const pct = Math.round((count / total) * 100)
                 const color = LANG_COLORS_S[lang] || '#8A9BB5'
                 return (
-                  <div key={i} style={{ marginBottom: i < sorted.length - 1 ? 12 : 0 }}>
+                  <div key={lang} style={{ marginBottom: i < arr.length - 1 ? 12 : 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: B.white }}>{LANG_NAMES_S[lang] || lang}</span>
                       <span style={{ fontSize: 11, color: B.mid }}>{count}</span>
@@ -1036,7 +888,9 @@ function StatsView({ onBack, communityId = 'bitcoin-abuja' }) {
                   </div>
                 )
               })
-            })()}
+          ) : (
+            <div style={{ fontSize: 12, color: B.dim, textAlign: 'center', padding: 8 }}>No data yet</div>
+          )}
         </div>
 
         <div style={{ background: B.navyL, border: `1px solid ${B.dim}`, borderRadius: 16, padding: 18 }}>
@@ -1106,9 +960,7 @@ function StatsView({ onBack, communityId = 'bitcoin-abuja' }) {
             </div>
             {data.requests.map((r, i) => (
               <div key={i} style={{ background: B.navyLL, border: `1px solid ${B.dim}`, borderRadius: 10, padding: 10, marginBottom: i < data.requests.length - 1 ? 8 : 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 600, color: B.white }}>
-                  {r.name || 'Anonymous'} — {r.community || 'Unknown'}
-                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: B.white }}>{r.name || 'Anonymous'} — {r.community || 'Unknown'}</div>
                 <div style={{ fontSize: 10, color: B.mid, marginTop: 3 }}>
                   📍 {r.city || 'Unknown'} · {new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </div>
@@ -1129,9 +981,7 @@ function JoinCommunityScreen({ community, onDone, onBack, titleColor, title }) {
       <SubHeader title={title} titleColor={titleColor} onBack={onBack} />
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ background: B.navyL, borderRadius: 20, padding: 20, border: `1px solid ${B.orangeB}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: B.white, textAlign: 'center', lineHeight: 1.5 }}>
-            Join {community.name} on Fedi
-          </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white, textAlign: 'center', lineHeight: 1.5 }}>Join {community.name} on Fedi</div>
           <div style={{ fontSize: 12, color: B.gold, background: B.goldF, border: `1px solid ${B.goldB}`, borderRadius: 10, padding: '10px 14px', lineHeight: 1.6, textAlign: 'center', width: '100%' }}>
             Important: Join a federation from the Wallet tab first — that creates your Bitcoin wallet. Then join this community separately.
           </div>
@@ -1195,7 +1045,7 @@ function StepCard({ step, feedback, titleColor, onYes, onNo, onSkip }) {
       }}
     >
       <div style={{ fontSize: 10, color: B.dim, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>{step.ins}</div>
-      <div style={{ fontSize: 16, fontWeight: 900, color: B.white, lineHeight: 1.5, marginBottom: 20 }}>{step.q}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: B.white, lineHeight: 1.5, marginBottom: 20 }}>{step.q}</div>
 
       {feedback === 'yes' && (
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 13px', background: `${titleColor}18`, border: `1px solid ${titleColor}40`, borderRadius: 12, marginBottom: 14 }}>
@@ -1382,863 +1232,17 @@ function ContextCarousel({ cards, onDone, onBack, title, titleColor }) {
     </div>
   )
 }
-function MerchantOnboarding({ onBack, community }) {
-  const [phase, setPhase] = useState('steps')
-  const [step, setStep] = useState(0)
-  const [feedback, setFeedback] = useState(null)
-  const [shopName, setShopName] = useState('')
-  const [shopCategory, setShopCategory] = useState('')
-  const [shopLocation, setShopLocation] = useState('')
-  const [bannerLang, setBannerLang] = useState('en')
-  const [qrData, setQrData] = useState(null)
-  const [bannerMode, setBannerMode] = useState('print')
-  const [bannerReady, setBannerReady] = useState(false)
-  const canvasRef = useRef(null)
-
-  const currentStep = MERCHANT_STEPS[Math.min(step, MERCHANT_STEPS.length - 1)]
-
-  useEffect(() => {
-    if (step >= MERCHANT_STEPS.length) setPhase('name')
-  }, [step])
-
-  const handleYes = () => {
-    setFeedback('yes')
-    setTimeout(() => {
-      setFeedback(null)
-      setStep(p => p + 1)
-    }, 900)
-  }
-
-  const handleNo = action => {
-    if (action === 'reset') {
-      setFeedback(null)
-      return
-    }
-    if (currentStep?.joinScreen) {
-      setPhase('join')
-      return
-    }
-    setFeedback('no')
-  }
-
-  useEffect(() => {
-    if (phase !== 'banner' || !canvasRef.current || !qrData) return
-
-    let cancelled = false
-    const canvas = canvasRef.current
-    const isPrint = bannerMode === 'print'
-    const W = isPrint ? 1240 : 1080
-    const H = isPrint ? 620 : 1080
-    canvas.width = W
-    canvas.height = H
-
-    const loadImage = src =>
-      new Promise(resolve => {
-        const img = new Image()
-        img.crossOrigin = 'anonymous'
-        img.onload = () => resolve(img)
-        img.onerror = () => resolve(null)
-        img.src = src
-      })
-
-    const fitText = (ctx, text, x, y, maxWidth, lineHeight, maxLines = 2) => {
-      const words = String(text || '').split(/\s+/)
-      let line = ''
-      let lines = 0
-      for (let i = 0; i < words.length; i++) {
-        const test = line ? line + ' ' + words[i] : words[i]
-        if (ctx.measureText(test).width > maxWidth && i > 0) {
-          ctx.fillText(line, x, y)
-          line = words[i]
-          y += lineHeight
-          lines++
-          if (lines >= maxLines - 1) break
-        } else {
-          line = test
-        }
-      }
-      if (lines < maxLines) ctx.fillText(line, x, y)
-      return y
-    }
-
-    const drawBanner = async () => {
-      const [fediImg, btcImg, qrImg] = await Promise.all([
-        loadImage('/fedi-logo-dark.png'),
-        loadImage('/bitcoin-abuja-logo.png'),
-        loadImage(qrData),
-      ])
-      if (cancelled) return
-
-      const ctx = canvas.getContext('2d')
-
-      const bg = ctx.createLinearGradient(0, 0, W, H)
-      bg.addColorStop(0, '#0E1524')
-      bg.addColorStop(0.5, '#1B2232')
-      bg.addColorStop(1, '#0B1220')
-      ctx.fillStyle = bg
-      ctx.fillRect(0, 0, W, H)
-
-      const topBand = ctx.createLinearGradient(0, 0, W, 0)
-      topBand.addColorStop(0, '#F97316')
-      topBand.addColorStop(0.55, '#D4A843')
-      topBand.addColorStop(1, '#F97316')
-      ctx.fillStyle = topBand
-      ctx.fillRect(0, 0, W, isPrint ? 12 : 14)
-
-      const cat = BUSINESS_CATEGORIES.find(c => c.id === shopCategory)
-      const catEmoji = cat?.emoji || '🏪'
-      const catLabel = cat?.label || 'Business'
-      const name = shopName || 'Your Shop'
-      const loc = shopLocation || ''
-      const [s1, s2] = BILINGUAL[bannerLang] || BILINGUAL.en
-
-      ctx.fillStyle = 'rgba(255,255,255,0.04)'
-      rrect(ctx, 42, 42, W - 84, H - 84, 28)
-      ctx.fill()
-
-      const drawLogo = (img, x, y, w, h) => {
-        if (img) ctx.drawImage(img, x, y, w, h)
-      }
-
-      if (isPrint) {
-        const leftX = 72
-        const leftW = 640
-        const rightX = 824
-        const rightW = 344
-
-        ctx.fillStyle = 'rgba(27,34,50,0.9)'
-        rrect(ctx, leftX - 20, 84, leftW, 420, 28)
-        ctx.fill()
-
-        ctx.fillStyle = 'rgba(255,255,255,0.96)'
-        rrect(ctx, rightX - 16, 86, rightW, 420, 28)
-        ctx.fill()
-
-        drawLogo(btcImg, 72, 56, 190, 54)
-        drawLogo(fediImg, W - 152, 56, 108, 32)
-
-        ctx.textAlign = 'left'
-        ctx.textBaseline = 'top'
-
-        ctx.fillStyle = '#D4A843'
-        ctx.font = '700 22px Satoshi, Arial'
-        ctx.fillText('BITCOIN ACCEPTED HERE', leftX, 118)
-
-        ctx.fillStyle = '#EDF2FF'
-        ctx.font = '900 58px Satoshi, Arial'
-        fitText(ctx, name, leftX, 160, 560, 62, 2)
-
-        ctx.fillStyle = '#F97316'
-        ctx.font = '900 44px Satoshi, Arial'
-        ctx.fillText('Accept Bitcoin', leftX, 294)
-
-        ctx.fillStyle = '#2DD4BF'
-        ctx.font = '700 22px Satoshi, Arial'
-        ctx.fillText('Lightning payments. Instant settlement.', leftX, 352)
-
-        if (loc) {
-          ctx.fillStyle = '#8A9BB5'
-          ctx.font = '500 21px Satoshi, Arial'
-          ctx.fillText('📍 ' + loc, leftX, 394)
-        }
-
-        ctx.fillStyle = '#EDF2FF'
-        ctx.font = '700 20px Satoshi, Arial'
-        ctx.fillText(catEmoji + '  ' + catLabel, leftX, loc ? 432 : 396)
-
-        ctx.fillStyle = '#8A9BB5'
-        ctx.font = '500 17px Satoshi, Arial'
-        fitText(ctx, s1, leftX, loc ? 466 : 430, 560, 22, 2)
-        if (s2) ctx.fillText(s2, leftX, loc ? 494 : 456)
-
-        ctx.fillStyle = 'rgba(255,255,255,0.96)'
-        rrect(ctx, rightX, 116, 312, 312, 24)
-        ctx.fill()
-        ctx.fillStyle = '#0B1220'
-        ctx.font = '700 18px Satoshi, Arial'
-        ctx.textAlign = 'center'
-        ctx.fillText('Scan to pay', rightX + 156, 136)
-        if (qrImg) ctx.drawImage(qrImg, rightX + 40, 168, 232, 232)
-
-        ctx.fillStyle = '#8A9BB5'
-        ctx.font = '500 14px Satoshi, Arial'
-        ctx.fillText('Bitcoin Abuja', rightX + 156, 414)
-        ctx.fillStyle = '#2DD4BF'
-        ctx.font = '700 14px Satoshi, Arial'
-        ctx.fillText('No POS needed', rightX + 156, 436)
-
-        ctx.textAlign = 'left'
-        ctx.fillStyle = '#EDF2FF'
-        ctx.font = '500 15px Satoshi, Arial'
-        ctx.fillText('Bitcoin Abuja · Powered by Fedi', 72, H - 50)
-
-        if (fediImg) ctx.drawImage(fediImg, W - 154, H - 52, 112, 32)
-      } else {
-        ctx.fillStyle = 'rgba(255,255,255,0.04)'
-        rrect(ctx, 44, 44, W - 88, H - 88, 30)
-        ctx.fill()
-
-        drawLogo(btcImg, 68, 56, 180, 50)
-
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'top'
-
-        ctx.fillStyle = '#D4A843'
-        ctx.font = '700 24px Satoshi, Arial'
-        ctx.fillText('BITCOIN ACCEPTED HERE', W / 2, 118)
-
-        ctx.fillStyle = '#EDF2FF'
-        ctx.font = '900 66px Satoshi, Arial'
-        fitText(ctx, name, W / 2, 164, 900, 72, 2)
-
-        ctx.fillStyle = '#F97316'
-        ctx.font = '900 54px Satoshi, Arial'
-        ctx.fillText('Bitcoin Lightning', W / 2, 260)
-
-        ctx.fillStyle = '#8A9BB5'
-        ctx.font = '500 22px Satoshi, Arial'
-        ctx.fillText(loc || 'Abuja, Nigeria', W / 2, 332)
-
-        ctx.fillStyle = '#2DD4BF'
-        ctx.font = '700 22px Satoshi, Arial'
-        ctx.fillText(catEmoji + ' ' + catLabel, W / 2, 368)
-
-        ctx.fillStyle = 'rgba(255,255,255,0.96)'
-        rrect(ctx, 140, 430, 800, 390, 32)
-        ctx.fill()
-
-        ctx.fillStyle = '#0B1220'
-        ctx.font = '700 18px Satoshi, Arial'
-        ctx.fillText('Scan to pay', W / 2, 452)
-
-        if (qrImg) ctx.drawImage(qrImg, 400, 488, 280, 280)
-
-        ctx.fillStyle = '#8A9BB5'
-        ctx.font = '500 18px Satoshi, Arial'
-        ctx.fillText('Bitcoin Abuja • Powered by Fedi', W / 2, 792)
-
-        ctx.fillStyle = '#D4A843'
-        ctx.font = '700 18px Satoshi, Arial'
-        ctx.fillText(s1, W / 2, 826)
-        if (s2) {
-          ctx.fillStyle = '#8A9BB5'
-          ctx.font = '500 15px Satoshi, Arial'
-          ctx.fillText(s2, W / 2, 854)
-        }
-
-        if (fediImg) ctx.drawImage(fediImg, W / 2 - 60, H - 58, 120, 34)
-      }
-
-      if (!cancelled) setBannerReady(true)
-    }
-
-    drawBanner().catch(() => {
-      if (!cancelled) setBannerReady(true)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [phase, bannerMode, qrData, shopName, shopLocation, shopCategory, bannerLang])
-
-  if (phase === 'sharecard') return <ShareCard type="merchant" shopName={shopName} shopCategory={shopCategory} community={community} onClose={onBack} />
-
-  if (phase === 'banner') {
-    return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <SubHeader title="Your Banner" titleColor={B.teal} onBack={() => setPhase('upload')} />
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {['print', 'square'].map(m => (
-              <button key={m} className={`banner-tab${bannerMode === m ? ' active' : ''}`} onClick={() => setBannerMode(m)}>
-                {m === 'print' ? 'Print (A4)' : 'Square (Social)'}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ borderRadius: 18, overflow: 'hidden', boxShadow: '0 16px 40px rgba(0,0,0,.45)', background: '#0B1220', minHeight: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {!bannerReady && <div style={{ color: B.mid, fontSize: 13, padding: 20 }}>Generating banner...</div>}
-            <canvas ref={canvasRef} style={{ width: '100%', height: 'auto', display: bannerReady ? 'block' : 'none' }} />
-          </div>
-
-          {bannerReady && (
-            <>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button
-                  className="dl-btn"
-                  style={{ background: `linear-gradient(135deg,${B.gold},${B.goldD})`, color: '#0D0A00', boxShadow: '0 3px 16px rgba(212,168,67,.35)' }}
-                  onClick={() => {
-                    const n = (shopName || 'merchant').toLowerCase().replace(/[^a-z0-9]/g, '-')
-                    const a = document.createElement('a')
-                    a.download = `${n}-${bannerMode}.png`
-                    a.href = canvasRef.current.toDataURL('image/png')
-                    a.click()
-                  }}
-                >
-                  <Icons.Download /> Download
-                </button>
-                <button
-                  className="dl-btn"
-                  style={{ background: `linear-gradient(135deg,${B.orange},#c2610f)`, color: 'white' }}
-                  onClick={() => setPhase('sharecard')}
-                >
-                  Share Card →
-                </button>
-              </div>
-              <div style={{ fontSize: 11, color: B.dim, textAlign: 'center' }}>Save to camera roll · WhatsApp to any print shop</div>
-            </>
-          )}
-
-          <button
-            onClick={onBack}
-            style={{
-              width: '100%',
-              padding: 12,
-              borderRadius: 14,
-              border: `1px solid ${B.navyB}`,
-              background: 'transparent',
-              color: B.mid,
-              fontSize: 13,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            ← Back to Sabi AI
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (phase === 'upload') {
-    return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('lang')} />
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ background: B.navyL, borderRadius: 20, padding: 20, border: `1px solid ${B.tealB}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: B.white, textAlign: 'center', lineHeight: 1.5 }}>Upload your Fedi payment QR</div>
-            <div style={{ fontSize: 13, color: B.mid, textAlign: 'center', lineHeight: 1.65 }}>Open Fedi → Wallet tab → Receive → screenshot that screen → upload here.</div>
-            {!qrData ? (
-              <div className="upload-area" onClick={() => document.getElementById('merQR').click()}>
-                <div style={{ fontSize: 36 }}>📸</div>
-                <div style={{ fontSize: 14, color: B.teal, fontWeight: 700, textAlign: 'center' }}>Tap to upload your QR screenshot</div>
-                <div style={{ fontSize: 11, color: B.dim, textAlign: 'center' }}>JPEG or PNG from your camera roll</div>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                <img src={qrData} alt="QR" style={{ maxWidth: 180, maxHeight: 180, borderRadius: 12, border: `2px solid ${B.tealB}` }} />
-                <button
-                  onClick={() => document.getElementById('merQR').click()}
-                  style={{ background: 'transparent', border: `1px solid ${B.navyB}`, color: B.dim, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: '8px 18px', borderRadius: 20 }}
-                >
-                  Upload different image
-                </button>
-              </div>
-            )}
-            <input
-              type="file"
-              id="merQR"
-              accept="image/*"
-              onChange={e => {
-                const f = e.target.files[0]
-                if (!f) return
-                const reader = new FileReader()
-                reader.onload = ev => setQrData(ev.target.result)
-                reader.readAsDataURL(f)
-                e.target.value = ''
-              }}
-              style={{ display: 'none' }}
-            />
-            <button
-              disabled={!qrData}
-              onClick={() => {
-                logOnboarding('merchant', shopName, shopLocation, shopCategory, community.id)
-                setPhase('banner')
-              }}
-              style={{
-                width: '100%',
-                padding: 14,
-                borderRadius: 14,
-                border: 'none',
-                background: qrData ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
-                color: qrData ? '#0D1A1A' : B.dim,
-                fontWeight: 800,
-                fontSize: 15,
-                cursor: qrData ? 'pointer' : 'default',
-                fontFamily: 'inherit',
-                boxShadow: qrData ? '0 3px 16px rgba(45,212,191,.3)' : 'none',
-              }}
-            >
-              Generate My Banner ✦
-            </button>
-          </div>
-          <div style={{ fontSize: 11, color: B.dim, textAlign: 'center' }}>Bitcoin Abuja · Powered by Fedi</div>
-        </div>
-      </div>
-    )
-  }
-
-  if (phase === 'lang') {
-    return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('location')} />
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: B.white, marginBottom: 4 }}>Choose your banner language</div>
-          {[
-            { key: 'en', title: 'English only', sub: '"Accept Bitcoin · Scan to pay"' },
-            { key: 'en-ha', title: 'English + Hausa', sub: '"Accept Bitcoin · Muna karbar Bitcoin"' },
-            { key: 'en-yo', title: 'English + Yoruba', sub: '"Accept Bitcoin · A gba Bitcoin"' },
-            { key: 'en-ig', title: 'English + Igbo', sub: '"Accept Bitcoin · Anyị na-anabata Bitcoin"' },
-            { key: 'en-pc', title: 'English + Pidgin', sub: '"Accept Bitcoin · We dey collect Bitcoin"' },
-          ].map(o => (
-            <button
-              key={o.key}
-              onClick={() => {
-                setBannerLang(o.key)
-                setPhase('upload')
-              }}
-              style={{
-                padding: '14px 16px',
-                borderRadius: 14,
-                border: `1px solid ${B.navyB}`,
-                background: B.navyL,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                textAlign: 'left',
-                width: '100%',
-              }}
-            >
-              <div style={{ fontSize: 14, fontWeight: 700, color: B.white, marginBottom: 3 }}>{o.title}</div>
-              <div style={{ fontSize: 11.5, color: B.dim }}>{o.sub}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (phase === 'location') {
-    return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('category')} />
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: B.white }}>Where is your shop located?</div>
-          <div style={{ fontSize: 13, color: B.mid }}>This helps customers find you on BTCMap.</div>
-          <input
-            value={shopLocation}
-            onChange={e => setShopLocation(e.target.value)}
-            placeholder="e.g. Wuse Market, Abuja"
-            style={{ padding: '14px 16px', background: B.navy, border: `1px solid ${B.navyB}`, borderRadius: 14, fontSize: 14, color: B.white, fontFamily: 'inherit', outline: 'none' }}
-          />
-          <button
-            onClick={() => setPhase('lang')}
-            style={{
-              padding: 14,
-              borderRadius: 14,
-              border: 'none',
-              background: shopLocation.trim() ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
-              color: shopLocation.trim() ? '#0D1A1A' : B.dim,
-              fontWeight: 700,
-              fontSize: 15,
-              cursor: shopLocation.trim() ? 'pointer' : 'default',
-              fontFamily: 'inherit',
-            }}
-          >
-            Continue
-          </button>
-          <button
-            onClick={() => setPhase('lang')}
-            style={{ background: 'transparent', border: 'none', color: B.dim, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}
-          >
-            Skip — continue without location
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (phase === 'category') {
-    return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('name')} />
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: B.white }}>What type of business is this?</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            {BUSINESS_CATEGORIES.map(c => (
-              <button key={c.id} className={`cat-btn${shopCategory === c.id ? ' selected' : ''}`} onClick={() => setShopCategory(c.id)}>
-                <div style={{ fontSize: 22, marginBottom: 6 }}>{c.emoji}</div>
-                <div style={{ fontSize: 12.5, fontWeight: 600, color: B.white, lineHeight: 1.3 }}>{c.label}</div>
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => setPhase('location')}
-            disabled={!shopCategory}
-            style={{
-              padding: 14,
-              borderRadius: 14,
-              border: 'none',
-              background: shopCategory ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
-              color: shopCategory ? '#0D1A1A' : B.dim,
-              fontWeight: 700,
-              fontSize: 15,
-              cursor: shopCategory ? 'pointer' : 'default',
-              fontFamily: 'inherit',
-              marginTop: 4,
-            }}
-          >
-            Continue
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (phase === 'name') {
-    return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={onBack} />
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: B.white }}>What is your shop or business name?</div>
-          <input
-            value={shopName}
-            onChange={e => setShopName(e.target.value)}
-            placeholder="e.g. Fatima's Fashion, Musa Suya Joint…"
-            style={{ padding: '14px 16px', background: B.navy, border: `1px solid ${B.navyB}`, borderRadius: 14, fontSize: 14, color: B.white, fontFamily: 'inherit', outline: 'none' }}
-          />
-          <button
-            onClick={() => setPhase('category')}
-            style={{
-              padding: 14,
-              borderRadius: 14,
-              border: 'none',
-              background: shopName.trim() ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
-              color: shopName.trim() ? '#0D1A1A' : B.dim,
-              fontWeight: 700,
-              fontSize: 15,
-              cursor: shopName.trim() ? 'pointer' : 'default',
-              fontFamily: 'inherit',
-            }}
-          >
-            Continue
-          </button>
-          <button
-            onClick={() => setPhase('category')}
-            style={{ background: 'transparent', border: 'none', color: B.dim, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}
-          >
-            Skip — continue without name
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (phase === 'join') {
-    return <JoinCommunityScreen community={community} onDone={() => { setPhase('steps'); setStep(p => p + 1) }} onBack={() => setPhase('steps')} titleColor={B.teal} title="Merchant Setup" />
-  }
-
-  return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={onBack} />
-      <Progress step={step} total={MERCHANT_STEPS.length} color={B.teal} />
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 40px' }}>
-        <StepCard step={currentStep} feedback={feedback} titleColor={B.teal} onYes={handleYes} onNo={handleNo} onSkip={() => setStep(p => p + 1)} />
-        <div style={{ fontSize: 11, color: B.dim, textAlign: 'center', marginTop: 16 }}>Bitcoin Abuja · Powered by Fedi</div>
-      </div>
-    </div>
-  )
-}
-function MemberOnboarding({ onBack, community }) {
-  const [phase, setPhase] = useState('choice')
-  const [learnStep, setLearnStep] = useState(0)
-  const [step, setStep] = useState(0)
-  const [feedback, setFeedback] = useState(null)
-  const [contextType, setContextType] = useState(null)
-
-  const currentStep = MEMBER_STEPS[Math.min(step, MEMBER_STEPS.length - 1)]
-
-  const handleYes = () => {
-    setFeedback('yes')
-    setTimeout(() => {
-      setFeedback(null)
-      if (step === MEMBER_STEPS.length - 1) {
-        logOnboarding('member', null, null, null, community.id)
-        setPhase('done')
-      } else {
-        setStep(p => p + 1)
-      }
-    }, 900)
-  }
-
-  const handleNo = action => {
-    if (action === 'reset') {
-      setFeedback(null)
-      return
-    }
-    if (currentStep?.joinScreen) {
-      setPhase('join')
-      return
-    }
-    setFeedback('no')
-  }
-
-  if (phase === 'sharecard') return <ShareCard type="member" community={community} onClose={onBack} />
-
-  if (phase === 'done') {
-    return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <SubHeader title="Welcome" titleColor={B.orange} onBack={onBack} />
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div className="done-pop" style={{ background: B.navyL, border: `1px solid ${B.orangeB}`, borderRadius: 20, padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center' }}>
-            <div style={{ fontSize: 52 }}>₿</div>
-            <div style={{ fontSize: 20, fontWeight: 900, color: B.orange, lineHeight: 1.3 }}>Welcome to {community.name}!</div>
-            <div style={{ fontSize: 13, color: B.mid, lineHeight: 1.65, maxWidth: 280 }}>You are now part of a real Bitcoin circular economy in Nigeria. Your sats are yours — no bank, no middleman.</div>
-          </div>
-
-          <div style={{ background: B.navy, border: '1px solid rgba(212,168,67,.2)', borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: 11, color: B.gold, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>🎁 100 Free Sats Waiting</div>
-            <div style={{ fontSize: 13.5, color: B.white, lineHeight: 1.6 }}>
-              The {community.name} Sats Faucet has 100 free sats for new members. This is your first real Bitcoin — proof of ownership. Stack more via Cashwyre when you are ready.
-            </div>
-            <button
-              className="action-cta"
-              onClick={() => window.open(community.faucetLink, '_blank')}
-              style={{
-                width: '100%',
-                padding: 13,
-                borderRadius: 12,
-                border: 'none',
-                background: `linear-gradient(135deg,${B.gold},${B.goldD})`,
-                color: '#0D0A00',
-                fontWeight: 800,
-                fontSize: 14,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                boxShadow: '0 3px 12px rgba(212,168,67,.35)',
-              }}
-            >
-              Claim My 100 Free Sats →
-            </button>
-          </div>
-
-          <button
-            className="action-cta"
-            onClick={() => setPhase('sharecard')}
-            style={{
-              width: '100%',
-              padding: 14,
-              borderRadius: 14,
-              border: 'none',
-              background: `linear-gradient(135deg,${B.orange},#c2610f)`,
-              color: 'white',
-              fontWeight: 800,
-              fontSize: 14,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              boxShadow: '0 3px 16px rgba(249,115,22,.3)',
-            }}
-          >
-            Share Your Bitcoin Card ✦
-          </button>
-
-          <button
-            onClick={onBack}
-            style={{
-              width: '100%',
-              padding: 12,
-              borderRadius: 14,
-              border: `1px solid ${B.navyB}`,
-              background: 'transparent',
-              color: B.mid,
-              fontSize: 13,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
-            Back to Sabi AI
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  if (phase === 'join') {
-    return <JoinCommunityScreen community={community} onDone={() => { setPhase('steps'); setStep(p => p + 1) }} onBack={() => setPhase('steps')} titleColor={B.orange} title="New Member Setup" />
-  }
-
-  if (phase === 'context') {
-    const cards = CONTEXT_CARDS[contextType] || []
-    return (
-      <ContextCarousel
-        cards={cards}
-        title={contextType === 'savings' ? 'Why Bitcoin?' : 'Why Lightning?'}
-        titleColor={B.orange}
-        onBack={() => setPhase('choice')}
-        onDone={() => {
-          setPhase('steps')
-          setStep(0)
-        }}
-      />
-    )
-  }
-
-  if (phase === 'learn') {
-    const card = LEARN_CARDS[learnStep]
-    const isLast = learnStep === LEARN_CARDS.length - 1
-    return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <SubHeader title="Bitcoin Basics" titleColor={B.purple} onBack={() => (learnStep > 0 ? setLearnStep(p => p - 1) : setPhase('choice'))} />
-        <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', margin: '10px 16px 0', borderRadius: 3, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${((learnStep + 1) / LEARN_CARDS.length) * 100}%`, background: `linear-gradient(90deg,${B.purple},${B.teal})`, borderRadius: 3, transition: 'width 0.5s' }} />
-        </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div className="card-slide" key={learnStep} style={{ background: B.navyL, border: `1px solid ${B.purpleB}`, borderRadius: 20, padding: 22, display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div style={{ fontSize: 36 }}>{card.icon}</div>
-            <div style={{ fontSize: 17, fontWeight: 900, color: B.white, lineHeight: 1.3 }}>{card.title}</div>
-            <div style={{ fontSize: 13.5, color: B.mid, lineHeight: 1.75 }}>{card.body}</div>
-            <div style={{ background: B.purpleF, border: `1px solid ${B.purpleB}`, borderRadius: 12, padding: '13px 15px', fontSize: 13, color: B.purple, lineHeight: 1.6 }}>
-              {card.highlight}
-            </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 11, color: B.dim }}>
-              {learnStep + 1} of {LEARN_CARDS.length}
-            </span>
-            <div style={{ display: 'flex', gap: 5 }}>
-              {LEARN_CARDS.map((_, i) => (
-                <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: i === learnStep ? B.purple : 'rgba(255,255,255,0.12)', transition: 'background 0.3s' }} />
-              ))}
-            </div>
-          </div>
-          {isLast ? (
-            <button
-              className="action-cta"
-              onClick={() => {
-                setPhase('steps')
-                setStep(0)
-              }}
-              style={{
-                width: '100%',
-                padding: 14,
-                borderRadius: 14,
-                border: 'none',
-                background: `linear-gradient(135deg,${B.orange},#c2610f)`,
-                color: 'white',
-                fontWeight: 800,
-                fontSize: 15,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                boxShadow: '0 3px 16px rgba(249,115,22,.3)',
-              }}
-            >
-              I'm ready — set up my wallet →
-            </button>
-          ) : (
-            <button
-              className="action-cta"
-              onClick={() => setLearnStep(p => p + 1)}
-              style={{
-                width: '100%',
-                padding: 14,
-                borderRadius: 14,
-                border: 'none',
-                background: `linear-gradient(135deg,${B.purple},#7c3aed)`,
-                color: 'white',
-                fontWeight: 800,
-                fontSize: 15,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                boxShadow: '0 3px 16px rgba(167,139,250,.3)',
-              }}
-            >
-              Next →
-            </button>
-          )}
-          <div style={{ fontSize: 11, color: B.dim, textAlign: 'center' }}>Bitcoin Abuja · Powered by Fedi</div>
-        </div>
-      </div>
-    )
-  }
-
-  if (phase === 'steps') {
-    return (
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <SubHeader title="New Member Setup" titleColor={B.orange} onBack={() => (step > 0 ? setStep(p => p - 1) : setPhase('choice'))} />
-        <Progress step={step} total={MEMBER_STEPS.length} color={B.orange} />
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 40px' }}>
-          <StepCard step={currentStep} feedback={feedback} titleColor={B.orange} onYes={handleYes} onNo={handleNo} onSkip={() => setStep(p => p + 1)} />
-          <div style={{ fontSize: 11, color: B.dim, textAlign: 'center', marginTop: 16 }}>Bitcoin Abuja · Powered by Fedi</div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-      <SubHeader title="New Member Setup" titleColor={B.orange} onBack={onBack} />
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontSize: 16, fontWeight: 900, color: B.white, lineHeight: 1.4, marginBottom: 4 }}>What brings you to {community.name}?</div>
-        <div style={{ fontSize: 13, color: B.mid, lineHeight: 1.6, marginBottom: 8 }}>
-          Choose what matters most to you. We will show you exactly why Bitcoin is the right tool — then get you set up.
-        </div>
-
-        {[
-          { icon: '📉', label: 'Protect my savings from Naira inflation', sub: 'See how Bitcoin protects your money — with real numbers', type: 'savings', color: B.gold },
-          { icon: '⚡', label: 'Send money without bank fees', sub: 'See how much you can save on every transfer', type: 'remittance', color: B.teal },
-          { icon: '📚', label: 'Learn about Bitcoin first', sub: '5 short cards covering everything you need to know', type: 'learn', color: B.purple },
-          { icon: '🚀', label: 'I know Bitcoin — just set me up', sub: 'Skip straight to wallet setup', type: 'skip', color: B.orange },
-        ].map((c, i) => (
-          <button
-            key={i}
-            className="choice-btn"
-            onClick={() => {
-              if (c.type === 'learn') setPhase('learn')
-              else if (c.type === 'skip') {
-                setPhase('steps')
-                setStep(0)
-              } else {
-                setContextType(c.type)
-                setPhase('context')
-              }
-            }}
-            style={{
-              width: '100%',
-              padding: '16px',
-              borderRadius: 16,
-              border: `1px solid ${c.color}33`,
-              background: `${c.color}08`,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              textAlign: 'left',
-              display: 'flex',
-              gap: 14,
-              alignItems: 'flex-start',
-            }}
-          >
-            <div style={{ fontSize: 26, flexShrink: 0, marginTop: 2 }}>{c.icon}</div>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: B.white, lineHeight: 1.3, marginBottom: 4 }}>{c.label}</div>
-              <div style={{ fontSize: 11.5, color: B.mid, lineHeight: 1.4 }}>{c.sub}</div>
-            </div>
-          </button>
-        ))}
-
-        <div style={{ fontSize: 11, color: B.dim, textAlign: 'center', marginTop: 4 }}>Bitcoin Abuja · Powered by Fedi</div>
-      </div>
-    </div>
-  )
-}
-
 function HomeActionCard({ icon, title, sub, color, onClick, accent = 'soft' }) {
   const bg = accent === 'strong' ? `${color}12` : `${color}08`
   const border = accent === 'strong' ? `${color}55` : `${color}28`
+
   return (
     <button
       onClick={onClick}
       className="prompt-card"
       style={{
         width: '100%',
-        padding: accent === 'strong' ? '18px 16px' : '14px 14px',
+        padding: accent === 'strong' ? '18px 16px' : '14px',
         borderRadius: 18,
         border: `1px solid ${border}`,
         background: bg,
@@ -2550,58 +1554,48 @@ export default function App() {
       {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
       <div className={splashDone ? 'chat-in' : ''} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
         <div style={{ padding: '12px 14px', background: B.navyL, borderBottom: `1px solid ${B.navyB}`, display: 'flex', alignItems: 'center', gap: 10, position: 'sticky', top: 0, zIndex: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {screen === 'chat' && (
-              <button
-                onClick={resetChat}
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 12,
-                  border: `1px solid ${B.goldB}`,
-                  background: `linear-gradient(135deg, ${B.goldF}, rgba(212,168,67,.02))`,
-                  color: B.gold,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  boxShadow: '0 0 0 3px rgba(212,168,67,.08)',
-                }}
-              >
-                <Icons.Back />
-              </button>
-            )}
+          {(hasMessages || isLoading) ? (
+            <button
+              onClick={resetChat}
+              style={{
+                border: `1px solid ${B.goldB}`,
+                background: B.goldF,
+                color: B.gold,
+                borderRadius: 999,
+                padding: '7px 12px',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
+              ← Home
+            </button>
+          ) : (
+            <div style={{ width: 54 }} />
+          )}
+
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
             <img src={community.appLogo} alt="Sabi AI" style={{ height: 34, width: 'auto', objectFit: 'contain' }} />
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {isSpeaking && (
-              <button
-                onClick={stopSpeaking}
-                className="speaking"
-                style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(45,212,191,.1)', border: `1px solid ${B.tealB}`, borderRadius: 100, padding: '4px 10px', fontSize: 11, color: B.teal, cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                <Icons.Speaker /> Stop
-              </button>
-            )}
-            <button
-              onClick={() => setMode('stats')}
-              style={{
-                fontSize: 10,
-                color: B.white,
-                background: 'rgba(212,168,67,.12)',
-                border: `1px solid ${B.goldB}`,
-                borderRadius: 10,
-                padding: '6px 10px',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                letterSpacing: 0.5,
-                fontWeight: 800,
-              }}
-            >
-              Stats
-            </button>
-          </div>
+          <button
+            onClick={() => setMode('stats')}
+            style={{
+              fontSize: 11,
+              color: B.white,
+              background: `linear-gradient(135deg,${B.gold},${B.goldD})`,
+              border: 'none',
+              borderRadius: 999,
+              padding: '8px 12px',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              fontWeight: 800,
+              boxShadow: '0 3px 16px rgba(212,168,67,.25)',
+            }}
+          >
+            Stats
+          </button>
         </div>
 
         <div style={{ padding: '10px 16px 12px', background: B.navyL, borderBottom: `1px solid ${B.navyB}`, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
