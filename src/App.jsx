@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -38,7 +38,7 @@ async function submitCommunityRequest(data) {
 function getCommunityFromURL() {
   try {
     return new URLSearchParams(window.location.search).get('community') || 'bitcoin-abuja'
-  } catch (e) {
+  } catch {
     return 'bitcoin-abuja'
   }
 }
@@ -47,8 +47,8 @@ async function fetchBTC() {
   try {
     const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,ngn')
     const d = await r.json()
-    if (d?.bitcoin?.usd) return d.bitcoin
-  } catch (e) {}
+    if (d?.bitcoin?.usd && d?.bitcoin?.ngn) return d.bitcoin
+  } catch {}
   return { usd: 96300, ngn: 154000000 }
 }
 
@@ -64,30 +64,23 @@ function blobToBase64(blob) {
   })
 }
 
-function pickRecorderMimeType() {
-  if (!window.MediaRecorder?.isTypeSupported) return ''
-  const options = [
-    'audio/mp4',
-    'audio/webm;codecs=opus',
-    'audio/webm',
-    'audio/ogg;codecs=opus',
-  ]
-  return options.find(type => window.MediaRecorder.isTypeSupported(type)) || ''
-}
-
-async function transcribeAudioBlob(blob) {
+async function transcribeAudioBlob(blob, mimeType) {
   const audioBase64 = await blobToBase64(blob)
   const response = await fetch('/api/transcribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       audioBase64,
-      mimeType: blob.type || 'audio/webm',
+      mimeType: mimeType || blob.type || 'audio/webm',
     }),
   })
 
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok) throw new Error(data.error || 'Transcription failed')
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.error || 'Transcription failed')
+  }
+
+  const data = await response.json()
   return data.text || ''
 }
 
@@ -99,7 +92,7 @@ function createAudioFromBase64(audioBase64) {
     const audio = new Audio(url)
     audio.__objectUrl = url
     return audio
-  } catch (e) {
+  } catch {
     return null
   }
 }
@@ -117,7 +110,7 @@ function speakDevice(text, lang) {
 function fileToBase64(file) {
   return new Promise((res, rej) => {
     const reader = new FileReader()
-    reader.onload = () => res(reader.result.split(',')[1])
+    reader.onload = () => res(String(reader.result || '').split(',')[1] || '')
     reader.onerror = rej
     reader.readAsDataURL(file)
   })
@@ -205,11 +198,31 @@ const PROMPTS_BY_LANG = {
 }
 
 const WELCOME_BY_LANG = {
-  en: { greeting: 'How can I help you?', sub: 'Ask, learn, or start using Bitcoin in your language.', langs: 'English · Hausa · Yoruba · Igbo · Pidgin' },
-  ha: { greeting: 'Ina iya taimaka maka?', sub: 'Tambaya, koya, ko fara amfani da Bitcoin a harshenka.', langs: 'Hausa · English · Yoruba · Igbo · Pidgin' },
-  yo: { greeting: 'Bawo ni mo se le ran o lowo?', sub: 'Beere, ko eko, tabi bere fun lilo Bitcoin ni ede re.', langs: 'Yoruba · Hausa · English · Igbo · Pidgin' },
-  ig: { greeting: 'Kedu ka m ga-esi nyere gi aka?', sub: 'Jụọ, mụta, ma ọ bụ bido iji Bitcoin n’asụsụ gị.', langs: 'Igbo · Hausa · Yoruba · English · Pidgin' },
-  pc: { greeting: 'How I fit help you?', sub: 'Ask, learn, or start to use Bitcoin for your side.', langs: 'Pidgin · Hausa · Yoruba · Igbo · English' },
+  en: {
+    greeting: 'How can I help you?',
+    sub: 'Ask, learn, or start using Bitcoin in your language.',
+    langs: 'English · Hausa · Yoruba · Igbo · Pidgin',
+  },
+  ha: {
+    greeting: 'Ina iya taimaka maka?',
+    sub: 'Tambaya, koya, ko fara amfani da Bitcoin a harshenka.',
+    langs: 'Hausa · English · Yoruba · Igbo · Pidgin',
+  },
+  yo: {
+    greeting: 'Bawo ni mo se le ran o lowo?',
+    sub: 'Beere, ko eko, tabi bere fun lilo Bitcoin ni ede re.',
+    langs: 'Yoruba · Hausa · English · Igbo · Pidgin',
+  },
+  ig: {
+    greeting: 'Kedu ka m ga-esi nyere gi aka?',
+    sub: 'Jụọ, mụta, ma ọ bụ bido iji Bitcoin n’asụsụ gị.',
+    langs: 'Igbo · Hausa · Yoruba · English · Pidgin',
+  },
+  pc: {
+    greeting: 'How I fit help you?',
+    sub: 'Ask, learn, or start to use Bitcoin for your side.',
+    langs: 'Pidgin · Hausa · Yoruba · Igbo · English',
+  },
 }
 
 const ERROR_BY_LANG = {
@@ -378,6 +391,7 @@ const MEMBER_STEPS = [
     no: 'Open Fedi → Profile → Personal Backup → write every word on paper.',
   },
 ]
+
 async function sendToAI(history, btc, activeLang, community) {
   const satN = btc ? (btc.ngn / 100000000).toFixed(2) : '1.54'
   const usd = btc ? btc.usd.toLocaleString() : '96,300'
@@ -481,8 +495,8 @@ const B = {
 
 const CSS = `@import url('https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,700,900&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{background:#1B2232;-webkit-font-smoothing:antialiased;}
-::-webkit-scrollbar{width:0;}
+body{background:#1B2232;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+::-webkit-scrollbar{width:0;height:0;}
 @keyframes splashOut{from{opacity:1}to{opacity:0}}
 @keyframes chatIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
@@ -491,43 +505,43 @@ body{background:#1B2232;-webkit-font-smoothing:antialiased;}
 @keyframes bounce{0%,60%,100%{transform:scale(1);opacity:.25}30%{transform:scale(1.8);opacity:1}}
 @keyframes liveDot{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
-@keyframes micRing{0%{box-shadow:0 0 0 0 rgba(212,168,67,.6)}100%{box-shadow:0 0 0 12px rgba(212,168,67,0)}}
+@keyframes micRing{0%{box-shadow:0 0 0 0 rgba(212,168,67,.55)}100%{box-shadow:0 0 0 12px rgba(212,168,67,0)}}
 @keyframes checkPop{0%{transform:scale(0)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
 @keyframes cardSlide{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 @keyframes donePop{from{opacity:0;transform:scale(0.94) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes speakPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.1);opacity:.7}}
-.splash-out{animation:splashOut 0.45s ease forwards;}
-.chat-in{animation:chatIn 0.45s cubic-bezier(0.22,1,0.36,1) both;}
-.w1{animation:slideUp 0.4s cubic-bezier(0.22,1,0.36,1) 0.00s both;}
-.w2{animation:slideUp 0.4s cubic-bezier(0.22,1,0.36,1) 0.07s both;}
-.w3{animation:slideUp 0.4s cubic-bezier(0.22,1,0.36,1) 0.14s both;}
-.w4{animation:slideUp 0.4s cubic-bezier(0.22,1,0.36,1) 0.21s both;}
-.msg-user{animation:fromRight 0.28s cubic-bezier(0.22,1,0.36,1) both;}
-.msg-bot{animation:fromLeft 0.28s cubic-bezier(0.22,1,0.36,1) both;}
-.card-slide{animation:cardSlide 0.35s cubic-bezier(0.22,1,0.36,1) both;}
-.done-pop{animation:donePop 0.5s cubic-bezier(0.22,1,0.36,1) both;}
+.splash-out{animation:splashOut .45s ease forwards;}
+.chat-in{animation:chatIn .45s cubic-bezier(.22,1,.36,1) both;}
+.w1{animation:slideUp .4s cubic-bezier(.22,1,.36,1) 0s both;}
+.w2{animation:slideUp .4s cubic-bezier(.22,1,.36,1) .07s both;}
+.w3{animation:slideUp .4s cubic-bezier(.22,1,.36,1) .14s both;}
+.w4{animation:slideUp .4s cubic-bezier(.22,1,.36,1) .21s both;}
+.msg-user{animation:fromRight .28s cubic-bezier(.22,1,.36,1) both;}
+.msg-bot{animation:fromLeft .28s cubic-bezier(.22,1,.36,1) both;}
+.card-slide{animation:cardSlide .35s cubic-bezier(.22,1,.36,1) both;}
+.done-pop{animation:donePop .5s cubic-bezier(.22,1,.36,1) both;}
 .speaking{animation:speakPulse 1.5s ease-in-out infinite;}
-.prompt-card{transition:transform 0.18s,border-color 0.18s,background 0.18s;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.prompt-card:active{transform:scale(0.97);}
-.send-btn{transition:transform 0.15s;}
-.send-btn:not(:disabled):active{transform:scale(0.96);}
-.mic-btn{transition:transform 0.15s;-webkit-tap-highlight-color:transparent;}
+.prompt-card{transition:transform .18s,border-color .18s,background .18s;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.prompt-card:active{transform:scale(.97);}
+.send-btn{transition:transform .15s;}
+.send-btn:not(:disabled):active{transform:scale(.96);}
+.mic-btn{transition:transform .15s;-webkit-tap-highlight-color:transparent;}
 .mic-btn.recording{animation:micRing 1s ease-out infinite;}
-.yes-btn:active{transform:scale(0.97);}
-.choice-btn{transition:all 0.15s;-webkit-tap-highlight-color:transparent;}
-.action-cta{transition:transform 0.15s;-webkit-tap-highlight-color:transparent;}
-.action-cta:active{transform:scale(0.97);}
-.attach-btn{transition:color 0.15s,background 0.15s;-webkit-tap-highlight-color:transparent;}
+.yes-btn:active{transform:scale(.97);}
+.choice-btn{transition:all .15s;-webkit-tap-highlight-color:transparent;}
+.action-cta{transition:transform .15s;-webkit-tap-highlight-color:transparent;}
+.action-cta:active{transform:scale(.97);}
+.attach-btn{transition:color .15s,background .15s;-webkit-tap-highlight-color:transparent;}
 .chat-input:focus{border-color:#D4A843 !important;box-shadow:0 0 0 3px rgba(212,168,67,.15) !important;outline:none;}
 .error-bubble{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);border-radius:18px 18px 18px 4px;padding:12px 16px;font-size:13.5px;color:#F87171;line-height:1.6;}
-.lang-bar{display:flex;gap:6px;padding:8px 16px;background:#222D3F;border-bottom:1px solid rgba(212,168,67,.14);overflow-x:auto;}
-.lang-pill{flex-shrink:0;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid rgba(212,168,67,.25);color:#8A9BB5;background:transparent;font-family:inherit;transition:all 0.15s;}
+.lang-bar{display:flex;gap:6px;overflow-x:auto;}
+.lang-pill{flex-shrink:0;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid rgba(212,168,67,.25);color:#8A9BB5;background:transparent;font-family:inherit;transition:all .15s;}
 .lang-pill.active{background:rgba(212,168,67,.12);border-color:rgba(212,168,67,.5);color:#D4A843;}
 .upload-area{border:2px dashed rgba(45,212,191,.4);border-radius:16px;padding:28px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;cursor:pointer;background:rgba(45,212,191,.06);}
-.banner-tab{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(212,168,67,.14);background:transparent;color:#8A9BB5;font-size:12px;cursor:pointer;font-family:inherit;transition:all 0.15s;font-weight:500;}
+.banner-tab{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(212,168,67,.14);background:transparent;color:#8A9BB5;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s;font-weight:500;}
 .banner-tab.active{background:rgba(212,168,67,.1);border-color:rgba(212,168,67,.4);color:#D4A843;}
 .dl-btn{flex:1;padding:14px;border-radius:14px;border:none;font-weight:700;font-size:14px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
-.cat-btn{padding:14px 12px;border-radius:12px;border:1px solid rgba(212,168,67,.2);background:rgba(212,168,67,.04);cursor:pointer;font-family:inherit;text-align:left;transition:all 0.15s;}
+.cat-btn{padding:14px 12px;border-radius:12px;border:1px solid rgba(212,168,67,.2);background:rgba(212,168,67,.04);cursor:pointer;font-family:inherit;text-align:left;transition:all .15s;}
 .cat-btn.selected{border-color:#D4A843;background:rgba(212,168,67,.12);}
 .back-btn{display:flex;align-items:center;gap:6px;background:transparent;border:none;color:#8A9BB5;cursor:pointer;font-family:inherit;font-size:13px;padding:4px 0;}
 .stat-pill{border-radius:10px;padding:12px 14px;font-size:13px;font-weight:600;line-height:1.4;}`
@@ -608,11 +622,34 @@ const inputStyle = {
 
 function SubHeader({ title, titleColor, onBack, rightSlot = null }) {
   return (
-    <div style={{ padding: '12px 16px', background: B.navyL, borderBottom: `1px solid ${B.navyB}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, position: 'sticky', top: 0, zIndex: 10 }}>
+    <div
+      style={{
+        padding: '12px 16px',
+        background: B.navyL,
+        borderBottom: `1px solid ${B.navyB}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+      }}
+    >
       <button className="back-btn" onClick={onBack}>
         <Icons.Back /> Back
       </button>
-      <div style={{ fontSize: 13, fontWeight: 700, color: titleColor || B.white, letterSpacing: 0.5, textTransform: 'uppercase', textAlign: 'center', flex: 1 }}>
+      <div
+        style={{
+          fontSize: 13,
+          fontWeight: 700,
+          color: titleColor || B.white,
+          letterSpacing: 0.5,
+          textTransform: 'uppercase',
+          textAlign: 'center',
+          flex: 1,
+        }}
+      >
         {title}
       </div>
       <div style={{ minWidth: 40, display: 'flex', justifyContent: 'flex-end' }}>{rightSlot}</div>
@@ -624,11 +661,29 @@ function Progress({ step, total, color }) {
   return (
     <div style={{ padding: '10px 16px 0' }}>
       <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: 10 }}>
-        <div style={{ height: '100%', width: `${(step / total) * 100}%`, background: `linear-gradient(90deg,${color},${B.gold})`, borderRadius: 3, transition: 'width 0.45s cubic-bezier(0.22,1,0.36,1)' }} />
+        <div
+          style={{
+            height: '100%',
+            width: `${(step / total) * 100}%`,
+            background: `linear-gradient(90deg,${color},${B.gold})`,
+            borderRadius: 3,
+            transition: 'width 0.45s cubic-bezier(0.22,1,0.36,1)',
+          }}
+        />
       </div>
       <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 12 }}>
         {Array.from({ length: total }).map((_, i) => (
-          <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: i < step ? color : i === step ? B.gold : 'rgba(255,255,255,0.08)', boxShadow: i === step ? `0 0 8px ${B.gold}` : 'none', transition: 'all 0.3s' }} />
+          <div
+            key={i}
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: i < step ? color : i === step ? B.gold : 'rgba(255,255,255,0.08)',
+              boxShadow: i === step ? `0 0 8px ${B.gold}` : 'none',
+              transition: 'all 0.3s',
+            }}
+          />
         ))}
       </div>
     </div>
@@ -648,26 +703,96 @@ function SplashScreen({ onDone }) {
   }, [onDone])
 
   return (
-    <div className={leaving ? 'splash-out' : ''} style={{ position: 'fixed', inset: 0, zIndex: 999, background: B.navy, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div
+      className={leaving ? 'splash-out' : ''}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 999,
+        background: B.navy,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
       <img src="/logo.png" alt="Sabi AI" style={{ width: 280, maxWidth: '75vw', height: 'auto', objectFit: 'contain' }} />
     </div>
   )
 }
 
+function HomeActionCard({ icon, title, sub, color, onClick, accent = 'soft' }) {
+  const bg = accent === 'strong' ? `${color}12` : `${color}08`
+  const border = accent === 'strong' ? `${color}55` : `${color}28`
+
+  return (
+    <button
+      onClick={onClick}
+      className="prompt-card"
+      style={{
+        width: '100%',
+        padding: accent === 'strong' ? '18px 16px' : '14px 14px',
+        borderRadius: 18,
+        border: `1px solid ${border}`,
+        background: bg,
+        textAlign: 'left',
+        display: 'flex',
+        gap: 14,
+        alignItems: 'flex-start',
+        boxShadow: accent === 'strong' ? '0 8px 26px rgba(0,0,0,.22)' : '0 4px 16px rgba(0,0,0,.18)',
+        fontFamily: 'inherit',
+      }}
+    >
+      <div
+        style={{
+          width: accent === 'strong' ? 44 : 36,
+          height: accent === 'strong' ? 44 : 36,
+          borderRadius: 14,
+          background: `linear-gradient(135deg, ${color}, ${color}cc)`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          color: color === B.teal ? '#0D1A1A' : '#0D0A00',
+          fontSize: accent === 'strong' ? 20 : 17,
+          boxShadow: `0 0 0 3px ${color}22`,
+        }}
+      >
+        {icon}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: accent === 'strong' ? 14.5 : 13.5, fontWeight: 800, color: B.white, lineHeight: 1.28, marginBottom: 4 }}>
+          {title}
+        </div>
+        <div style={{ fontSize: accent === 'strong' ? 11.5 : 11, color: B.mid, lineHeight: 1.45 }}>
+          {sub}
+        </div>
+      </div>
+    </button>
+  )
+}
 function ShareCard({ type, shopName = '', shopCategory = '', community = COMMUNITIES['bitcoin-abuja'], onClose }) {
   const title = type === 'merchant' ? 'My shop accepts Bitcoin now' : 'I joined Bitcoin Abuja'
-  const subtitle = type === 'merchant' ? `${shopName || 'My shop'} is now ready for Bitcoin Lightning payments.` : `I just joined ${community.name} on Fedi.`
+  const subtitle =
+    type === 'merchant'
+      ? `${shopName || 'My shop'} is now ready for Bitcoin Lightning payments.`
+      : `I just joined ${community.name} on Fedi.`
   const emoji = type === 'merchant' ? (CAT_EMOJI[shopCategory] || '🏪') : '₿'
-  const shareText = type === 'merchant'
-    ? `${title}\n${subtitle}\nJoin Bitcoin Abuja on Fedi: ${community.communityLink}`
-    : `${title}\n${subtitle}\nJoin here: ${community.communityLink}`
 
-  const shareToX = () => window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}`, '_blank', 'noopener,noreferrer')
+  const shareText =
+    type === 'merchant'
+      ? `${title}\n${subtitle}\nJoin Bitcoin Abuja on Fedi: ${community.communityLink}`
+      : `${title}\n${subtitle}\nJoin here: ${community.communityLink}`
+
+  const shareToX = () => {
+    const url = `https://x.com/intent/tweet?text=${encodeURIComponent(shareText)}`
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
   const copyText = async () => {
     try {
       await navigator.clipboard.writeText(shareText)
       alert('Copied')
-    } catch (e) {
+    } catch {
       alert('Copy failed')
     }
   }
@@ -676,31 +801,97 @@ function ShareCard({ type, shopName = '', shopCategory = '', community = COMMUNI
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <SubHeader title="Share Card" titleColor={type === 'merchant' ? B.teal : B.orange} onBack={onClose} />
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ background: `linear-gradient(180deg, ${B.navyL}, ${B.navy})`, border: `1px solid ${type === 'merchant' ? B.tealB : B.orangeB}`, borderRadius: 20, padding: 22, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 12 }}>
+        <div
+          style={{
+            background: `linear-gradient(180deg, ${B.navyL}, ${B.navy})`,
+            border: `1px solid ${type === 'merchant' ? B.tealB : B.orangeB}`,
+            borderRadius: 20,
+            padding: 22,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: 12,
+          }}
+        >
           <div style={{ fontSize: 42 }}>{emoji}</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: B.white, lineHeight: 1.25 }}>{title}</div>
           <div style={{ fontSize: 14, color: B.mid, lineHeight: 1.7 }}>{subtitle}</div>
+
           {type === 'merchant' && (
-            <div style={{ marginTop: 4, width: '100%', padding: '12px 14px', borderRadius: 12, background: B.tealF, border: `1px solid ${B.tealB}`, color: B.teal, fontSize: 12, lineHeight: 1.6 }}>
+            <div
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                borderRadius: 12,
+                background: B.tealF,
+                border: `1px solid ${B.tealB}`,
+                color: B.teal,
+                fontSize: 12,
+                lineHeight: 1.6,
+              }}
+            >
               {shopName ? `${shopName} · ` : ''}Scan, pay, and settle with Bitcoin Lightning.
             </div>
           )}
+
           <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 8 }}>
-            <button className="action-cta" onClick={shareToX} style={{ padding: 14, borderRadius: 14, border: 'none', background: `linear-gradient(135deg, ${B.gold}, ${B.goldD})`, color: '#0D0A00', fontWeight: 800, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button
+              className="action-cta"
+              onClick={shareToX}
+              style={{
+                padding: 14,
+                borderRadius: 14,
+                border: 'none',
+                background: `linear-gradient(135deg, ${B.gold}, ${B.goldD})`,
+                color: '#0D0A00',
+                fontWeight: 800,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
               Post to X
             </button>
-            <button className="action-cta" onClick={copyText} style={{ padding: 14, borderRadius: 14, border: `1px solid ${B.navyB}`, background: 'transparent', color: B.white, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button
+              className="action-cta"
+              onClick={copyText}
+              style={{
+                padding: 14,
+                borderRadius: 14,
+                border: `1px solid ${B.navyB}`,
+                background: 'transparent',
+                color: B.white,
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+              }}
+            >
               Copy Text
             </button>
           </div>
         </div>
-        <button onClick={onClose} style={{ width: '100%', padding: 12, borderRadius: 14, border: `1px solid ${B.navyB}`, background: 'transparent', color: B.mid, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+
+        <button
+          onClick={onClose}
+          style={{
+            width: '100%',
+            padding: 12,
+            borderRadius: 14,
+            border: `1px solid ${B.navyB}`,
+            background: 'transparent',
+            color: B.mid,
+            fontSize: 13,
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
           Back
         </button>
       </div>
     </div>
   )
 }
+
 function CommunityRequestForm({ onBack }) {
   const [name, setName] = useState('')
   const [community, setCommunity] = useState('')
@@ -731,10 +922,20 @@ function CommunityRequestForm({ onBack }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         <SubHeader title="Request Sent" titleColor={B.teal} onBack={onBack} />
         <div style={{ flex: 1, padding: '20px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ background: B.navyL, border: `1px solid ${B.tealB}`, borderRadius: 20, padding: 24, textAlign: 'center' }}>
+          <div
+            style={{
+              background: B.navyL,
+              border: `1px solid ${B.tealB}`,
+              borderRadius: 20,
+              padding: 24,
+              textAlign: 'center',
+            }}
+          >
             <div style={{ fontSize: 44, marginBottom: 10 }}>✓</div>
             <div style={{ fontSize: 20, fontWeight: 900, color: B.white, marginBottom: 8 }}>Request received</div>
-            <div style={{ fontSize: 14, color: B.mid, lineHeight: 1.7 }}>Sabi can be adapted for your community.</div>
+            <div style={{ fontSize: 14, color: B.mid, lineHeight: 1.7 }}>
+              Sabi can be adapted for your community.
+            </div>
           </div>
           <button
             onClick={onBack}
@@ -761,8 +962,12 @@ function CommunityRequestForm({ onBack }) {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <SubHeader title="Community Request" titleColor={B.purple} onBack={onBack} />
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: B.white, lineHeight: 1.4 }}>Bring Sabi to your community</div>
-        <div style={{ fontSize: 13, color: B.mid, lineHeight: 1.7 }}>Fill this in and it gets saved for follow-up.</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: B.white, lineHeight: 1.4 }}>
+          Bring Sabi to your community
+        </div>
+        <div style={{ fontSize: 13, color: B.mid, lineHeight: 1.7 }}>
+          Fill this in and it gets saved for follow-up.
+        </div>
 
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" style={inputStyle} />
         <input value={community} onChange={e => setCommunity(e.target.value)} placeholder="Community name" style={inputStyle} />
@@ -822,14 +1027,11 @@ function StatsView({ onBack, communityId = 'bitcoin-abuja' }) {
       .catch(() => setLoading(false))
   }, [communityId])
 
-  const languageCounts = (() => {
-    const lc = {}
-    data?.langData?.forEach(r => {
-      const l = r.language || 'en'
-      lc[l] = (lc[l] || 0) + 1
-    })
-    return lc
-  })()
+  const statsCards = [
+    { label: 'Conversations', value: loading ? '—' : data?.totalConv ?? 0, delta: loading ? '...' : `+${data?.weekConv ?? 0} this week`, color: B.gold },
+    { label: 'Members', value: loading ? '—' : data?.totalMemb ?? 0, delta: loading ? '...' : `+${data?.weekMemb ?? 0} this week`, color: B.teal },
+    { label: 'Merchants', value: loading ? '—' : data?.merchants?.length ?? 0, delta: 'Bitcoin Abuja', color: B.orange },
+  ]
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
@@ -838,7 +1040,7 @@ function StatsView({ onBack, communityId = 'bitcoin-abuja' }) {
         <div style={{ background: B.navyL, border: `1px solid ${B.goldB}`, borderRadius: 16, padding: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ fontSize: 32, flexShrink: 0 }}>🇳🇬</div>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 900, color: B.white, lineHeight: 1.3, marginBottom: 4 }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: B.white, lineHeight: 1.3, marginBottom: 4 }}>
               Nigeria's Bitcoin AI guide.
               <br />
               <span style={{ color: B.gold }}>Real people. Real language. Real sats.</span>
@@ -848,36 +1050,37 @@ function StatsView({ onBack, communityId = 'bitcoin-abuja' }) {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-          {[
-            { label: 'Conversations', value: loading ? '—' : data?.totalConv ?? 0, delta: loading ? '...' : `+${data?.weekConv ?? 0} this week`, color: B.gold },
-            { label: 'Members', value: loading ? '—' : data?.totalMemb ?? 0, delta: loading ? '...' : `+${data?.weekMemb ?? 0} this week`, color: B.teal },
-            { label: 'Merchants', value: loading ? '—' : data?.merchants?.length ?? 0, delta: 'Bitcoin Abuja', color: B.orange },
-          ].map((s, i) => (
+          {statsCards.map((s, i) => (
             <div key={i} style={{ background: B.navyL, border: `1px solid ${B.dim}`, borderRadius: 14, padding: '14px 10px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,${s.color},${s.color}66)` }} />
               <div style={{ fontSize: 9, color: B.mid, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 6 }}>{s.label}</div>
               <div style={{ fontSize: 26, fontWeight: 900, color: s.color, letterSpacing: -1, marginBottom: 3 }}>{s.value}</div>
-              <div style={{ fontSize: 9, color: B.green, fontWeight: 600, lineHeight: 1.3 }}>{s.delta}</div>
+              <div style={{ fontSize: 9, color: B.green, fontWeight: 500, lineHeight: 1.3 }}>{s.delta}</div>
             </div>
           ))}
         </div>
 
         <div style={{ background: B.navyL, border: `1px solid ${B.dim}`, borderRadius: 16, padding: 18 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: B.gold }} />
             Language Breakdown
           </div>
           {loading ? (
             <div style={{ fontSize: 12, color: B.dim, textAlign: 'center', padding: 8 }}>Loading...</div>
-          ) : Object.keys(languageCounts).length ? (
-            Object.entries(languageCounts)
-              .sort((a, b) => b[1] - a[1])
-              .map(([lang, count], i, arr) => {
-                const total = Object.values(languageCounts).reduce((a, b) => a + b, 0) || 1
+          ) : (() => {
+              const lc = {}
+              data?.langData?.forEach(r => {
+                const l = r.language || 'en'
+                lc[l] = (lc[l] || 0) + 1
+              })
+              const total = Object.values(lc).reduce((a, b) => a + b, 0) || 1
+              const sorted = Object.entries(lc).sort((a, b) => b[1] - a[1])
+              if (!sorted.length) return <div style={{ fontSize: 12, color: B.dim, textAlign: 'center', padding: 8 }}>No data yet</div>
+              return sorted.map(([lang, count], i) => {
                 const pct = Math.round((count / total) * 100)
                 const color = LANG_COLORS_S[lang] || '#8A9BB5'
                 return (
-                  <div key={lang} style={{ marginBottom: i < arr.length - 1 ? 12 : 0 }}>
+                  <div key={i} style={{ marginBottom: i < sorted.length - 1 ? 12 : 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: B.white }}>{LANG_NAMES_S[lang] || lang}</span>
                       <span style={{ fontSize: 11, color: B.mid }}>{count}</span>
@@ -888,13 +1091,11 @@ function StatsView({ onBack, communityId = 'bitcoin-abuja' }) {
                   </div>
                 )
               })
-          ) : (
-            <div style={{ fontSize: 12, color: B.dim, textAlign: 'center', padding: 8 }}>No data yet</div>
-          )}
+            })()}
         </div>
 
         <div style={{ background: B.navyL, border: `1px solid ${B.dim}`, borderRadius: 16, padding: 18 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: B.teal }} />
             Daily Conversations
           </div>
@@ -926,7 +1127,7 @@ function StatsView({ onBack, communityId = 'bitcoin-abuja' }) {
         </div>
 
         <div style={{ background: B.navyL, border: `1px solid ${B.dim}`, borderRadius: 16, padding: 18 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 7, height: 7, borderRadius: '50%', background: B.orange }} />
             Active Merchants
           </div>
@@ -954,13 +1155,15 @@ function StatsView({ onBack, communityId = 'bitcoin-abuja' }) {
 
         {data?.requests?.length > 0 && (
           <div style={{ background: B.navyL, border: `1px solid ${B.dim}`, borderRadius: 16, padding: 18 }}>
-            <div style={{ fontSize: 12, fontWeight: 900, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ fontSize: 12, fontWeight: 800, color: B.white, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{ width: 7, height: 7, borderRadius: '50%', background: B.purple }} />
               Community Requests
             </div>
             {data.requests.map((r, i) => (
               <div key={i} style={{ background: B.navyLL, border: `1px solid ${B.dim}`, borderRadius: 10, padding: 10, marginBottom: i < data.requests.length - 1 ? 8 : 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: B.white }}>{r.name || 'Anonymous'} — {r.community || 'Unknown'}</div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: B.white }}>
+                  {r.name || 'Anonymous'} — {r.community || 'Unknown'}
+                </div>
                 <div style={{ fontSize: 10, color: B.mid, marginTop: 3 }}>
                   📍 {r.city || 'Unknown'} · {new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </div>
@@ -981,7 +1184,9 @@ function JoinCommunityScreen({ community, onDone, onBack, titleColor, title }) {
       <SubHeader title={title} titleColor={titleColor} onBack={onBack} />
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ background: B.navyL, borderRadius: 20, padding: 20, border: `1px solid ${B.orangeB}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: B.white, textAlign: 'center', lineHeight: 1.5 }}>Join {community.name} on Fedi</div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white, textAlign: 'center', lineHeight: 1.5 }}>
+            Join {community.name} on Fedi
+          </div>
           <div style={{ fontSize: 12, color: B.gold, background: B.goldF, border: `1px solid ${B.goldB}`, borderRadius: 10, padding: '10px 14px', lineHeight: 1.6, textAlign: 'center', width: '100%' }}>
             Important: Join a federation from the Wallet tab first — that creates your Bitcoin wallet. Then join this community separately.
           </div>
@@ -1232,9 +1437,862 @@ function ContextCarousel({ cards, onDone, onBack, title, titleColor }) {
     </div>
   )
 }
+function MerchantOnboarding({ onBack, community }) {
+  const [phase, setPhase] = useState('steps')
+  const [step, setStep] = useState(0)
+  const [feedback, setFeedback] = useState(null)
+  const [shopName, setShopName] = useState('')
+  const [shopCategory, setShopCategory] = useState('')
+  const [shopLocation, setShopLocation] = useState('')
+  const [bannerLang, setBannerLang] = useState('en')
+  const [qrData, setQrData] = useState(null)
+  const [bannerMode, setBannerMode] = useState('print')
+  const [bannerReady, setBannerReady] = useState(false)
+  const canvasRef = useRef(null)
+
+  const currentStep = MERCHANT_STEPS[Math.min(step, MERCHANT_STEPS.length - 1)]
+
+  useEffect(() => {
+    if (step >= MERCHANT_STEPS.length) setPhase('name')
+  }, [step])
+
+  const handleYes = () => {
+    setFeedback('yes')
+    setTimeout(() => {
+      setFeedback(null)
+      setStep(p => p + 1)
+    }, 900)
+  }
+
+  const handleNo = action => {
+    if (action === 'reset') {
+      setFeedback(null)
+      return
+    }
+    if (currentStep?.joinScreen) {
+      setPhase('join')
+      return
+    }
+    setFeedback('no')
+  }
+
+  useEffect(() => {
+    if (phase !== 'banner' || !canvasRef.current || !qrData) return
+
+    let cancelled = false
+    const canvas = canvasRef.current
+    const isPrint = bannerMode === 'print'
+    const W = isPrint ? 1240 : 1080
+    const H = isPrint ? 620 : 1080
+    canvas.width = W
+    canvas.height = H
+
+    const loadImage = src =>
+      new Promise(resolve => {
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => resolve(img)
+        img.onerror = () => resolve(null)
+        img.src = src
+      })
+
+    const fitText = (ctx, text, x, y, maxWidth, lineHeight, maxLines = 2) => {
+      const words = String(text || '').split(/\s+/)
+      let line = ''
+      let lines = 0
+      for (let i = 0; i < words.length; i++) {
+        const test = line ? line + ' ' + words[i] : words[i]
+        if (ctx.measureText(test).width > maxWidth && i > 0) {
+          ctx.fillText(line, x, y)
+          line = words[i]
+          y += lineHeight
+          lines++
+          if (lines >= maxLines - 1) break
+        } else {
+          line = test
+        }
+      }
+      if (lines < maxLines) ctx.fillText(line, x, y)
+      return y
+    }
+
+    const drawBanner = async () => {
+      const [fediImg, btcImg, qrImg] = await Promise.all([
+        loadImage('/fedi-logo-dark.png'),
+        loadImage('/bitcoin-abuja-logo.png'),
+        loadImage(qrData),
+      ])
+      if (cancelled) return
+
+      const ctx = canvas.getContext('2d')
+
+      const bg = ctx.createLinearGradient(0, 0, W, H)
+      bg.addColorStop(0, '#0E1524')
+      bg.addColorStop(0.5, '#1B2232')
+      bg.addColorStop(1, '#0B1220')
+      ctx.fillStyle = bg
+      ctx.fillRect(0, 0, W, H)
+
+      const topBand = ctx.createLinearGradient(0, 0, W, 0)
+      topBand.addColorStop(0, '#F97316')
+      topBand.addColorStop(0.55, '#D4A843')
+      topBand.addColorStop(1, '#F97316')
+      ctx.fillStyle = topBand
+      ctx.fillRect(0, 0, W, isPrint ? 12 : 14)
+
+      const cat = BUSINESS_CATEGORIES.find(c => c.id === shopCategory)
+      const catEmoji = cat?.emoji || '🏪'
+      const catLabel = cat?.label || 'Business'
+      const name = shopName || 'Your Shop'
+      const loc = shopLocation || ''
+      const [s1, s2] = BILINGUAL[bannerLang] || BILINGUAL.en
+
+      ctx.fillStyle = 'rgba(255,255,255,0.04)'
+      rrect(ctx, 42, 42, W - 84, H - 84, 28)
+      ctx.fill()
+
+      const drawLogo = (img, x, y, w, h) => {
+        if (img) ctx.drawImage(img, x, y, w, h)
+      }
+
+      if (isPrint) {
+        const leftX = 72
+        const leftW = 640
+        const rightX = 824
+        const rightW = 344
+
+        ctx.fillStyle = 'rgba(27,34,50,0.9)'
+        rrect(ctx, leftX - 20, 84, leftW, 420, 28)
+        ctx.fill()
+
+        ctx.fillStyle = 'rgba(255,255,255,0.96)'
+        rrect(ctx, rightX - 16, 86, rightW, 420, 28)
+        ctx.fill()
+
+        drawLogo(btcImg, 72, 56, 190, 54)
+        drawLogo(fediImg, W - 152, 56, 108, 32)
+
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'top'
+
+        ctx.fillStyle = '#D4A843'
+        ctx.font = '700 22px Satoshi, Arial'
+        ctx.fillText('BITCOIN ACCEPTED HERE', leftX, 118)
+
+        ctx.fillStyle = '#EDF2FF'
+        ctx.font = '900 58px Satoshi, Arial'
+        fitText(ctx, name, leftX, 160, 560, 62, 2)
+
+        ctx.fillStyle = '#F97316'
+        ctx.font = '900 44px Satoshi, Arial'
+        ctx.fillText('Accept Bitcoin', leftX, 294)
+
+        ctx.fillStyle = '#2DD4BF'
+        ctx.font = '700 22px Satoshi, Arial'
+        ctx.fillText('Lightning payments. Instant settlement.', leftX, 352)
+
+        if (loc) {
+          ctx.fillStyle = '#8A9BB5'
+          ctx.font = '500 21px Satoshi, Arial'
+          ctx.fillText('📍 ' + loc, leftX, 394)
+        }
+
+        ctx.fillStyle = '#EDF2FF'
+        ctx.font = '700 20px Satoshi, Arial'
+        ctx.fillText(catEmoji + '  ' + catLabel, leftX, loc ? 432 : 396)
+
+        ctx.fillStyle = '#8A9BB5'
+        ctx.font = '500 17px Satoshi, Arial'
+        fitText(ctx, s1, leftX, loc ? 466 : 430, 560, 22, 2)
+        if (s2) ctx.fillText(s2, leftX, loc ? 494 : 456)
+
+        ctx.fillStyle = 'rgba(255,255,255,0.96)'
+        rrect(ctx, rightX, 116, 312, 312, 24)
+        ctx.fill()
+
+        ctx.fillStyle = '#0B1220'
+        ctx.font = '700 18px Satoshi, Arial'
+        ctx.textAlign = 'center'
+        ctx.fillText('Scan to pay', rightX + 156, 136)
+
+        if (qrImg) ctx.drawImage(qrImg, rightX + 40, 168, 232, 232)
+
+        ctx.fillStyle = '#8A9BB5'
+        ctx.font = '500 14px Satoshi, Arial'
+        ctx.fillText('Bitcoin Abuja', rightX + 156, 414)
+
+        ctx.fillStyle = '#2DD4BF'
+        ctx.font = '700 14px Satoshi, Arial'
+        ctx.fillText('No POS needed', rightX + 156, 436)
+
+        ctx.textAlign = 'left'
+        ctx.fillStyle = '#EDF2FF'
+        ctx.font = '500 15px Satoshi, Arial'
+        ctx.fillText('Bitcoin Abuja · Powered by Fedi', 72, H - 50)
+
+        if (fediImg) ctx.drawImage(fediImg, W - 154, H - 52, 112, 32)
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.04)'
+        rrect(ctx, 44, 44, W - 88, H - 88, 30)
+        ctx.fill()
+
+        drawLogo(btcImg, 68, 56, 180, 50)
+
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'top'
+
+        ctx.fillStyle = '#D4A843'
+        ctx.font = '700 24px Satoshi, Arial'
+        ctx.fillText('BITCOIN ACCEPTED HERE', W / 2, 118)
+
+        ctx.fillStyle = '#EDF2FF'
+        ctx.font = '900 66px Satoshi, Arial'
+        fitText(ctx, name, W / 2, 164, 900, 72, 2)
+
+        ctx.fillStyle = '#F97316'
+        ctx.font = '900 54px Satoshi, Arial'
+        ctx.fillText('Bitcoin Lightning', W / 2, 260)
+
+        ctx.fillStyle = '#8A9BB5'
+        ctx.font = '500 22px Satoshi, Arial'
+        ctx.fillText(loc || 'Abuja, Nigeria', W / 2, 332)
+
+        ctx.fillStyle = '#2DD4BF'
+        ctx.font = '700 22px Satoshi, Arial'
+        ctx.fillText(catEmoji + ' ' + catLabel, W / 2, 368)
+
+        ctx.fillStyle = 'rgba(255,255,255,0.96)'
+        rrect(ctx, 140, 430, 800, 390, 32)
+        ctx.fill()
+
+        ctx.fillStyle = '#0B1220'
+        ctx.font = '700 18px Satoshi, Arial'
+        ctx.fillText('Scan to pay', W / 2, 452)
+
+        if (qrImg) ctx.drawImage(qrImg, 400, 488, 280, 280)
+
+        ctx.fillStyle = '#8A9BB5'
+        ctx.font = '500 18px Satoshi, Arial'
+        ctx.fillText('Bitcoin Abuja • Powered by Fedi', W / 2, 792)
+
+        ctx.fillStyle = '#D4A843'
+        ctx.font = '700 18px Satoshi, Arial'
+        ctx.fillText(s1, W / 2, 826)
+        if (s2) {
+          ctx.fillStyle = '#8A9BB5'
+          ctx.font = '500 15px Satoshi, Arial'
+          ctx.fillText(s2, W / 2, 854)
+        }
+
+        if (fediImg) ctx.drawImage(fediImg, W / 2 - 60, H - 58, 120, 34)
+      }
+
+      if (!cancelled) setBannerReady(true)
+    }
+
+    drawBanner().catch(() => {
+      if (!cancelled) setBannerReady(true)
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [phase, bannerMode, qrData, shopName, shopLocation, shopCategory, bannerLang])
+
+  if (phase === 'sharecard') return <ShareCard type="merchant" shopName={shopName} shopCategory={shopCategory} community={community} onClose={onBack} />
+
+  if (phase === 'banner') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Your Banner" titleColor={B.teal} onBack={() => setPhase('upload')} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {['print', 'square'].map(m => (
+              <button key={m} className={`banner-tab${bannerMode === m ? ' active' : ''}`} onClick={() => setBannerMode(m)}>
+                {m === 'print' ? 'Print (A4)' : 'Square (Social)'}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ borderRadius: 18, overflow: 'hidden', boxShadow: '0 16px 40px rgba(0,0,0,.45)', background: '#0B1220', minHeight: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {!bannerReady && <div style={{ color: B.mid, fontSize: 13, padding: 20 }}>Generating banner...</div>}
+            <canvas ref={canvasRef} style={{ width: '100%', height: 'auto', display: bannerReady ? 'block' : 'none' }} />
+          </div>
+
+          {bannerReady && (
+            <>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  className="dl-btn"
+                  style={{ background: `linear-gradient(135deg,${B.gold},${B.goldD})`, color: '#0D0A00', boxShadow: '0 3px 16px rgba(212,168,67,.35)' }}
+                  onClick={() => {
+                    const n = (shopName || 'merchant').toLowerCase().replace(/[^a-z0-9]/g, '-')
+                    const a = document.createElement('a')
+                    a.download = `${n}-${bannerMode}.png`
+                    a.href = canvasRef.current.toDataURL('image/png')
+                    a.click()
+                  }}
+                >
+                  <Icons.Download /> Download
+                </button>
+                <button
+                  className="dl-btn"
+                  style={{ background: `linear-gradient(135deg,${B.orange},#c2610f)`, color: 'white' }}
+                  onClick={() => setPhase('sharecard')}
+                >
+                  Share Card →
+                </button>
+              </div>
+              <div style={{ fontSize: 11, color: B.dim, textAlign: 'center' }}>Save to camera roll · WhatsApp to any print shop</div>
+            </>
+          )}
+
+          <button
+            onClick={onBack}
+            style={{
+              width: '100%',
+              padding: 12,
+              borderRadius: 14,
+              border: `1px solid ${B.navyB}`,
+              background: 'transparent',
+              color: B.mid,
+              fontSize: 13,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            ← Back to Sabi AI
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'upload') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('lang')} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ background: B.navyL, borderRadius: 20, padding: 20, border: `1px solid ${B.tealB}`, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: B.white, textAlign: 'center', lineHeight: 1.5 }}>
+              Upload your Fedi payment QR
+            </div>
+            <div style={{ fontSize: 13, color: B.mid, textAlign: 'center', lineHeight: 1.65 }}>
+              Open Fedi → Wallet tab → Receive → screenshot that screen → upload here.
+            </div>
+            {!qrData ? (
+              <div className="upload-area" onClick={() => document.getElementById('merQR').click()}>
+                <div style={{ fontSize: 36 }}>📸</div>
+                <div style={{ fontSize: 14, color: B.teal, fontWeight: 700, textAlign: 'center' }}>Tap to upload your QR screenshot</div>
+                <div style={{ fontSize: 11, color: B.dim, textAlign: 'center' }}>JPEG or PNG from your camera roll</div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <img src={qrData} alt="QR" style={{ maxWidth: 180, maxHeight: 180, borderRadius: 12, border: `2px solid ${B.tealB}` }} />
+                <button
+                  onClick={() => document.getElementById('merQR').click()}
+                  style={{ background: 'transparent', border: `1px solid ${B.navyB}`, color: B.dim, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', padding: '8px 18px', borderRadius: 20 }}
+                >
+                  Upload different image
+                </button>
+              </div>
+            )}
+            <input
+              type="file"
+              id="merQR"
+              accept="image/*"
+              onChange={e => {
+                const f = e.target.files[0]
+                if (!f) return
+                const reader = new FileReader()
+                reader.onload = ev => setQrData(ev.target.result)
+                reader.readAsDataURL(f)
+                e.target.value = ''
+              }}
+              style={{ display: 'none' }}
+            />
+            <button
+              disabled={!qrData}
+              onClick={() => {
+                logOnboarding('merchant', shopName, shopLocation, shopCategory, community.id)
+                setPhase('banner')
+              }}
+              style={{
+                width: '100%',
+                padding: 14,
+                borderRadius: 14,
+                border: 'none',
+                background: qrData ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
+                color: qrData ? '#0D1A1A' : B.dim,
+                fontWeight: 800,
+                fontSize: 15,
+                cursor: qrData ? 'pointer' : 'default',
+                fontFamily: 'inherit',
+                boxShadow: qrData ? '0 3px 16px rgba(45,212,191,.3)' : 'none',
+              }}
+            >
+              Generate My Banner ✦
+            </button>
+          </div>
+          <div style={{ fontSize: 11, color: B.dim, textAlign: 'center' }}>Bitcoin Abuja · Powered by Fedi</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'lang') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('location')} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white, marginBottom: 4 }}>Choose your banner language</div>
+          {[
+            { key: 'en', title: 'English only', sub: '"Bitcoin accepted here · Scan to pay"' },
+            { key: 'en-ha', title: 'English + Hausa', sub: '"Bitcoin accepted here · Muna karbar Bitcoin"' },
+            { key: 'en-yo', title: 'English + Yoruba', sub: '"Bitcoin accepted here · A gba Bitcoin"' },
+            { key: 'en-ig', title: 'English + Igbo', sub: '"Bitcoin accepted here · Anyị na-anabata Bitcoin"' },
+            { key: 'en-pc', title: 'English + Pidgin', sub: '"Bitcoin accepted here · We dey collect Bitcoin"' },
+          ].map(o => (
+            <button
+              key={o.key}
+              onClick={() => {
+                setBannerLang(o.key)
+                setPhase('upload')
+              }}
+              style={{
+                padding: '14px 16px',
+                borderRadius: 14,
+                border: `1px solid ${B.navyB}`,
+                background: B.navyL,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                textAlign: 'left',
+                width: '100%',
+              }}
+            >
+              <div style={{ fontSize: 14, fontWeight: 700, color: B.white, marginBottom: 3 }}>{o.title}</div>
+              <div style={{ fontSize: 11.5, color: B.dim }}>{o.sub}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'location') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('category')} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white }}>Where is your shop located?</div>
+          <div style={{ fontSize: 13, color: B.mid }}>This helps customers find you on BTCMap.</div>
+          <input
+            value={shopLocation}
+            onChange={e => setShopLocation(e.target.value)}
+            placeholder="e.g. Wuse Market, Abuja"
+            style={{ padding: '14px 16px', background: B.navy, border: `1px solid ${B.navyB}`, borderRadius: 14, fontSize: 14, color: B.white, fontFamily: 'inherit', outline: 'none' }}
+          />
+          <button
+            onClick={() => setPhase('lang')}
+            style={{
+              padding: 14,
+              borderRadius: 14,
+              border: 'none',
+              background: shopLocation.trim() ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
+              color: shopLocation.trim() ? '#0D1A1A' : B.dim,
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: shopLocation.trim() ? 'pointer' : 'default',
+              fontFamily: 'inherit',
+            }}
+          >
+            Continue
+          </button>
+          <button
+            onClick={() => setPhase('lang')}
+            style={{ background: 'transparent', border: 'none', color: B.dim, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}
+          >
+            Skip — continue without location
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'category') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={() => setPhase('name')} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white }}>What type of business is this?</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {BUSINESS_CATEGORIES.map(c => (
+              <button key={c.id} className={`cat-btn${shopCategory === c.id ? ' selected' : ''}`} onClick={() => setShopCategory(c.id)}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{c.emoji}</div>
+                <div style={{ fontSize: 12.5, fontWeight: 600, color: B.white, lineHeight: 1.3 }}>{c.label}</div>
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => setPhase('location')}
+            disabled={!shopCategory}
+            style={{
+              padding: 14,
+              borderRadius: 14,
+              border: 'none',
+              background: shopCategory ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
+              color: shopCategory ? '#0D1A1A' : B.dim,
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: shopCategory ? 'pointer' : 'default',
+              fontFamily: 'inherit',
+              marginTop: 4,
+            }}
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'name') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={onBack} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: B.white }}>What is your shop or business name?</div>
+          <input
+            value={shopName}
+            onChange={e => setShopName(e.target.value)}
+            placeholder="e.g. Fatima's Fashion, Musa Suya Joint…"
+            style={{ padding: '14px 16px', background: B.navy, border: `1px solid ${B.navyB}`, borderRadius: 14, fontSize: 14, color: B.white, fontFamily: 'inherit', outline: 'none' }}
+          />
+          <button
+            onClick={() => setPhase('category')}
+            style={{
+              padding: 14,
+              borderRadius: 14,
+              border: 'none',
+              background: shopName.trim() ? `linear-gradient(135deg,${B.teal},#0ea5a0)` : B.navyLL,
+              color: shopName.trim() ? '#0D1A1A' : B.dim,
+              fontWeight: 700,
+              fontSize: 15,
+              cursor: shopName.trim() ? 'pointer' : 'default',
+              fontFamily: 'inherit',
+            }}
+          >
+            Continue
+          </button>
+          <button
+            onClick={() => setPhase('category')}
+            style={{ background: 'transparent', border: 'none', color: B.dim, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', textAlign: 'center' }}
+          >
+            Skip — continue without name
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'join') {
+    return <JoinCommunityScreen community={community} onDone={() => { setPhase('steps'); setStep(p => p + 1) }} onBack={() => setPhase('steps')} titleColor={B.teal} title="Merchant Setup" />
+  }
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <SubHeader title="Merchant Setup" titleColor={B.teal} onBack={onBack} />
+      <Progress step={step} total={MERCHANT_STEPS.length} color={B.teal} />
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 40px' }}>
+        <StepCard step={currentStep} feedback={feedback} titleColor={B.teal} onYes={handleYes} onNo={handleNo} onSkip={() => setStep(p => p + 1)} />
+        <div style={{ fontSize: 11, color: B.dim, textAlign: 'center', marginTop: 16 }}>Bitcoin Abuja · Powered by Fedi</div>
+      </div>
+    </div>
+  )
+}
+
+function MemberOnboarding({ onBack, community }) {
+  const [phase, setPhase] = useState('choice')
+  const [learnStep, setLearnStep] = useState(0)
+  const [step, setStep] = useState(0)
+  const [feedback, setFeedback] = useState(null)
+  const [contextType, setContextType] = useState(null)
+
+  const currentStep = MEMBER_STEPS[Math.min(step, MEMBER_STEPS.length - 1)]
+
+  const handleYes = () => {
+    setFeedback('yes')
+    setTimeout(() => {
+      setFeedback(null)
+      if (step === MEMBER_STEPS.length - 1) {
+        logOnboarding('member', null, null, null, community.id)
+        setPhase('done')
+      } else {
+        setStep(p => p + 1)
+      }
+    }, 900)
+  }
+
+  const handleNo = action => {
+    if (action === 'reset') {
+      setFeedback(null)
+      return
+    }
+    if (currentStep?.joinScreen) {
+      setPhase('join')
+      return
+    }
+    setFeedback('no')
+  }
+
+  if (phase === 'sharecard') return <ShareCard type="member" community={community} onClose={onBack} />
+
+  if (phase === 'done') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Welcome" titleColor={B.orange} onBack={onBack} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="done-pop" style={{ background: B.navyL, border: `1px solid ${B.orangeB}`, borderRadius: 20, padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center' }}>
+            <div style={{ fontSize: 52 }}>₿</div>
+            <div style={{ fontSize: 20, fontWeight: 900, color: B.orange, lineHeight: 1.3 }}>Welcome to {community.name}!</div>
+            <div style={{ fontSize: 13, color: B.mid, lineHeight: 1.65, maxWidth: 280 }}>You are now part of a real Bitcoin circular economy in Nigeria. Your sats are yours — no bank, no middleman.</div>
+          </div>
+
+          <div style={{ background: B.navy, border: '1px solid rgba(212,168,67,.2)', borderRadius: 16, padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: 11, color: B.gold, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase' }}>🎁 100 Free Sats Waiting</div>
+            <div style={{ fontSize: 13.5, color: B.white, lineHeight: 1.6 }}>
+              The {community.name} Sats Faucet has 100 free sats for new members. This is your first real Bitcoin — proof of ownership. Stack more via Cashwyre when you are ready.
+            </div>
+            <button
+              className="action-cta"
+              onClick={() => window.open(community.faucetLink, '_blank')}
+              style={{
+                width: '100%',
+                padding: 13,
+                borderRadius: 12,
+                border: 'none',
+                background: `linear-gradient(135deg,${B.gold},${B.goldD})`,
+                color: '#0D0A00',
+                fontWeight: 800,
+                fontSize: 14,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                boxShadow: '0 3px 12px rgba(212,168,67,.35)',
+              }}
+            >
+              Claim My 100 Free Sats →
+            </button>
+          </div>
+
+          <button
+            className="action-cta"
+            onClick={() => setPhase('sharecard')}
+            style={{
+              width: '100%',
+              padding: 14,
+              borderRadius: 14,
+              border: 'none',
+              background: `linear-gradient(135deg,${B.orange},#c2610f)`,
+              color: 'white',
+              fontWeight: 800,
+              fontSize: 14,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              boxShadow: '0 3px 16px rgba(249,115,22,.3)',
+            }}
+          >
+            Share Your Bitcoin Card ✦
+          </button>
+
+          <button
+            onClick={onBack}
+            style={{
+              width: '100%',
+              padding: 12,
+              borderRadius: 14,
+              border: `1px solid ${B.navyB}`,
+              background: 'transparent',
+              color: B.mid,
+              fontSize: 13,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Back to Sabi AI
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'join') {
+    return <JoinCommunityScreen community={community} onDone={() => { setPhase('steps'); setStep(p => p + 1) }} onBack={() => setPhase('steps')} titleColor={B.orange} title="New Member Setup" />
+  }
+
+  if (phase === 'context') {
+    const cards = CONTEXT_CARDS[contextType] || []
+    return (
+      <ContextCarousel
+        cards={cards}
+        title={contextType === 'savings' ? 'Why Bitcoin?' : 'Why Lightning?'}
+        titleColor={B.orange}
+        onBack={() => setPhase('choice')}
+        onDone={() => {
+          setPhase('steps')
+          setStep(0)
+        }}
+      />
+    )
+  }
+
+  if (phase === 'learn') {
+    const card = LEARN_CARDS[learnStep]
+    const isLast = learnStep === LEARN_CARDS.length - 1
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="Bitcoin Basics" titleColor={B.purple} onBack={() => (learnStep > 0 ? setLearnStep(p => p - 1) : setPhase('choice'))} />
+        <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', margin: '10px 16px 0', borderRadius: 3, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${((learnStep + 1) / LEARN_CARDS.length) * 100}%`, background: `linear-gradient(90deg,${B.purple},${B.teal})`, borderRadius: 3, transition: 'width 0.5s' }} />
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 40px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="card-slide" key={learnStep} style={{ background: B.navyL, border: `1px solid ${B.purpleB}`, borderRadius: 20, padding: 22, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ fontSize: 36 }}>{card.icon}</div>
+            <div style={{ fontSize: 17, fontWeight: 900, color: B.white, lineHeight: 1.3 }}>{card.title}</div>
+            <div style={{ fontSize: 13.5, color: B.mid, lineHeight: 1.75 }}>{card.body}</div>
+            <div style={{ background: B.purpleF, border: `1px solid ${B.purpleB}`, borderRadius: 12, padding: '13px 15px', fontSize: 13, color: B.purple, lineHeight: 1.6 }}>
+              {card.highlight}
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 11, color: B.dim }}>
+              {learnStep + 1} of {LEARN_CARDS.length}
+            </span>
+            <div style={{ display: 'flex', gap: 5 }}>
+              {LEARN_CARDS.map((_, i) => (
+                <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: i === learnStep ? B.purple : 'rgba(255,255,255,0.12)', transition: 'background 0.3s' }} />
+              ))}
+            </div>
+          </div>
+          {isLast ? (
+            <button
+              className="action-cta"
+              onClick={() => {
+                setPhase('steps')
+                setStep(0)
+              }}
+              style={{
+                width: '100%',
+                padding: 14,
+                borderRadius: 14,
+                border: 'none',
+                background: `linear-gradient(135deg,${B.orange},#c2610f)`,
+                color: 'white',
+                fontWeight: 800,
+                fontSize: 15,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                boxShadow: '0 3px 16px rgba(249,115,22,.3)',
+              }}
+            >
+              I'm ready — set up my wallet →
+            </button>
+          ) : (
+            <button
+              className="action-cta"
+              onClick={() => setLearnStep(p => p + 1)}
+              style={{
+                width: '100%',
+                padding: 14,
+                borderRadius: 14,
+                border: 'none',
+                background: `linear-gradient(135deg,${B.purple},#7c3aed)`,
+                color: 'white',
+                fontWeight: 800,
+                fontSize: 15,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                boxShadow: '0 3px 16px rgba(167,139,250,.3)',
+              }}
+            >
+              Next →
+            </button>
+          )}
+          <div style={{ fontSize: 11, color: B.dim, textAlign: 'center' }}>Bitcoin Abuja · Powered by Fedi</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'steps') {
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <SubHeader title="New Member Setup" titleColor={B.orange} onBack={() => (step > 0 ? setStep(p => p - 1) : setPhase('choice'))} />
+        <Progress step={step} total={MEMBER_STEPS.length} color={B.orange} />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 40px' }}>
+          <StepCard step={currentStep} feedback={feedback} titleColor={B.orange} onYes={handleYes} onNo={handleNo} onSkip={() => setStep(p => p + 1)} />
+          <div style={{ fontSize: 11, color: B.dim, textAlign: 'center', marginTop: 16 }}>Bitcoin Abuja · Powered by Fedi</div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <SubHeader title="New Member Setup" titleColor={B.orange} onBack={onBack} />
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 40px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ fontSize: 16, fontWeight: 900, color: B.white, lineHeight: 1.4, marginBottom: 4 }}>What brings you to {community.name}?</div>
+        <div style={{ fontSize: 13, color: B.mid, lineHeight: 1.6, marginBottom: 8 }}>
+          Choose what matters most to you. We will show you exactly why Bitcoin is the right tool — then get you set up.
+        </div>
+
+        {[
+          { icon: '📉', label: 'Protect my savings from Naira inflation', sub: 'See how Bitcoin protects your money — with real numbers', type: 'savings', color: B.gold },
+          { icon: '⚡', label: 'Send money without bank fees', sub: 'See how much you can save on every transfer', type: 'remittance', color: B.teal },
+          { icon: '📚', label: 'Learn about Bitcoin first', sub: '5 short cards covering everything you need to know', type: 'learn', color: B.purple },
+          { icon: '🚀', label: 'I know Bitcoin — just set me up', sub: 'Skip straight to wallet setup', type: 'skip', color: B.orange },
+        ].map((c, i) => (
+          <button
+            key={i}
+            className="choice-btn"
+            onClick={() => {
+              if (c.type === 'learn') setPhase('learn')
+              else if (c.type === 'skip') {
+                setPhase('steps')
+                setStep(0)
+              } else {
+                setContextType(c.type)
+                setPhase('context')
+              }
+            }}
+            style={{
+              width: '100%',
+              padding: '16px',
+              borderRadius: 16,
+              border: `1px solid ${c.color}33`,
+              background: `${c.color}08`,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              textAlign: 'left',
+              display: 'flex',
+              gap: 14,
+              alignItems: 'flex-start',
+            }}
+          >
+            <div style={{ fontSize: 26, flexShrink: 0, marginTop: 2 }}>{c.icon}</div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: B.white, lineHeight: 1.3, marginBottom: 4 }}>{c.label}</div>
+              <div style={{ fontSize: 11.5, color: B.mid, lineHeight: 1.4 }}>{c.sub}</div>
+            </div>
+          </button>
+        ))}
+
+        <div style={{ fontSize: 11, color: B.dim, textAlign: 'center', marginTop: 4 }}>Bitcoin Abuja · Powered by Fedi</div>
+      </div>
+    </div>
+  )
+}
 function HomeActionCard({ icon, title, sub, color, onClick, accent = 'soft' }) {
-  const bg = accent === 'strong' ? `${color}12` : `${color}08`
-  const border = accent === 'strong' ? `${color}55` : `${color}28`
+  const isStrong = accent === 'strong'
 
   return (
     <button
@@ -1242,40 +2300,40 @@ function HomeActionCard({ icon, title, sub, color, onClick, accent = 'soft' }) {
       className="prompt-card"
       style={{
         width: '100%',
-        padding: accent === 'strong' ? '18px 16px' : '14px',
-        borderRadius: 18,
-        border: `1px solid ${border}`,
-        background: bg,
+        padding: isStrong ? '16px' : '14px',
+        borderRadius: 16,
+        border: `1px solid ${isStrong ? `${color}55` : `${color}28`}`,
+        background: isStrong ? `${color}10` : `${color}08`,
         textAlign: 'left',
         display: 'flex',
-        gap: 14,
+        gap: 12,
         alignItems: 'flex-start',
-        boxShadow: accent === 'strong' ? '0 8px 26px rgba(0,0,0,.22)' : '0 4px 16px rgba(0,0,0,.18)',
+        boxShadow: isStrong ? '0 8px 22px rgba(0,0,0,.20)' : '0 4px 14px rgba(0,0,0,.14)',
         fontFamily: 'inherit',
       }}
     >
       <div
         style={{
-          width: accent === 'strong' ? 44 : 36,
-          height: accent === 'strong' ? 44 : 36,
-          borderRadius: 14,
+          width: isStrong ? 42 : 34,
+          height: isStrong ? 42 : 34,
+          borderRadius: 13,
           background: `linear-gradient(135deg, ${color}, ${color}cc)`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
-          color: color === B.teal ? '#0D1A1A' : '#0D0A00',
-          fontSize: accent === 'strong' ? 20 : 17,
-          boxShadow: `0 0 0 3px ${color}22`,
+          color: '#0D0A00',
+          fontSize: isStrong ? 20 : 17,
+          boxShadow: `0 0 0 3px ${color}20`,
         }}
       >
         {icon}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: accent === 'strong' ? 14.5 : 13.5, fontWeight: 800, color: B.white, lineHeight: 1.28, marginBottom: 4 }}>
+        <div style={{ fontSize: isStrong ? 14.5 : 13.5, fontWeight: 800, color: B.white, lineHeight: 1.3, marginBottom: 4 }}>
           {title}
         </div>
-        <div style={{ fontSize: accent === 'strong' ? 11.5 : 11, color: B.mid, lineHeight: 1.45 }}>
+        <div style={{ fontSize: isStrong ? 11.5 : 11, color: B.mid, lineHeight: 1.45 }}>
           {sub}
         </div>
       </div>
@@ -1380,7 +2438,16 @@ export default function App() {
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream)
+
+      const preferredMimeType =
+        (window.MediaRecorder.isTypeSupported && window.MediaRecorder.isTypeSupported('audio/mp4') && 'audio/mp4') ||
+        (window.MediaRecorder.isTypeSupported && window.MediaRecorder.isTypeSupported('audio/webm;codecs=opus') && 'audio/webm;codecs=opus') ||
+        (window.MediaRecorder.isTypeSupported && window.MediaRecorder.isTypeSupported('audio/webm') && 'audio/webm') ||
+        ''
+
+      const recorder = preferredMimeType
+        ? new MediaRecorder(stream, { mimeType: preferredMimeType })
+        : new MediaRecorder(stream)
 
       mediaRecorderRef.current = recorder
       mediaChunksRef.current = []
@@ -1394,7 +2461,7 @@ export default function App() {
         stream.getTracks().forEach(track => track.stop())
 
         try {
-          const blob = new Blob(mediaChunksRef.current, { type: recorder.mimeType || 'audio/webm' })
+          const blob = new Blob(mediaChunksRef.current, { type: recorder.mimeType || preferredMimeType || 'audio/webm' })
           if (!blob.size) {
             setMicError('No audio detected. Try again.')
             return
@@ -1402,6 +2469,7 @@ export default function App() {
 
           setMicError('Transcribing...')
           const text = await transcribeAudioBlob(blob)
+
           if (text.trim()) {
             setInputText(text.trim())
             setMicError('')
@@ -1440,6 +2508,7 @@ export default function App() {
     const isImage = file.type.startsWith('image/')
     const isPDF = file.type === 'application/pdf'
     if (!isImage && !isPDF) return
+
     const base64 = await fileToBase64(file)
     const previewUrl = isImage ? URL.createObjectURL(file) : null
     setAttachedFile({ type: isImage ? 'image' : 'pdf', base64, mediaType: file.type, name: file.name, previewUrl })
@@ -1461,6 +2530,7 @@ export default function App() {
 
   const sendMessage = async textOverride => {
     const text = (textOverride || inputText).trim()
+
     if (text === '__MERCHANT__') {
       setMode('merchant')
       return
@@ -1499,8 +2569,9 @@ export default function App() {
     try {
       const { text: reply, audio } = await sendToAI(newHistory, btc, activeLang, community)
       logConversation(activeLang, community.id)
+
       setMessages(p => [...p, { role: 'assistant', content: [{ type: 'text', text: reply }] }])
-      setDisplayMsgs(p => [...p, { r: 'bot', c: reply, audio }])
+      setDisplayMsgs(p => [...p, { r: 'bot', c: reply, audio, lang: activeLang }])
 
       if (audio) {
         await playAssistantAudio(audio)
@@ -1520,7 +2591,7 @@ export default function App() {
       }
     } catch (err) {
       const errMsg = ERROR_BY_LANG[activeLang] || ERROR_BY_LANG.en
-      setDisplayMsgs(p => [...p, { r: 'error', c: errMsg }])
+      setDisplayMsgs(p => [...p, { r: 'error', c: errMsg, lang: activeLang }])
       setMessages(p => [...p, { role: 'assistant', content: [{ type: 'text', text: errMsg }] }])
     }
 
@@ -1538,7 +2609,18 @@ export default function App() {
   const langLabels = { en: 'EN', ha: 'HA', yo: 'YO', ig: 'IG', pc: 'PID' }
 
   const wrap = children => (
-    <div style={{ background: B.navy, minHeight: '100dvh', maxWidth: 440, margin: '0 auto', fontFamily: "'Satoshi',-apple-system,sans-serif", color: B.white, display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{
+        background: B.navy,
+        minHeight: '100dvh',
+        maxWidth: 440,
+        margin: '0 auto',
+        fontFamily: "'Satoshi',-apple-system,sans-serif",
+        color: B.white,
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <style>{CSS}</style>
       {children}
     </div>
@@ -1553,26 +2635,41 @@ export default function App() {
     <>
       {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
       <div className={splashDone ? 'chat-in' : ''} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-        <div style={{ padding: '12px 14px', background: B.navyL, borderBottom: `1px solid ${B.navyB}`, display: 'flex', alignItems: 'center', gap: 10, position: 'sticky', top: 0, zIndex: 10 }}>
-          {(hasMessages || isLoading) ? (
+        <div
+          style={{
+            padding: '12px 14px',
+            background: B.navyL,
+            borderBottom: `1px solid ${B.navyB}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            position: 'sticky',
+            top: 0,
+            zIndex: 10,
+          }}
+        >
+          {screen === 'chat' || hasMessages || isLoading ? (
             <button
               onClick={resetChat}
               style={{
+                width: 38,
+                height: 38,
+                borderRadius: 12,
                 border: `1px solid ${B.goldB}`,
-                background: B.goldF,
+                background: `linear-gradient(135deg, ${B.goldF}, rgba(212,168,67,.02))`,
                 color: B.gold,
-                borderRadius: 999,
-                padding: '7px 12px',
-                fontSize: 11,
-                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 cursor: 'pointer',
-                fontFamily: 'inherit',
+                boxShadow: '0 0 0 3px rgba(212,168,67,.08)',
+                flexShrink: 0,
               }}
             >
-              ← Home
+              <Icons.Back />
             </button>
           ) : (
-            <div style={{ width: 54 }} />
+            <div style={{ width: 38, height: 38 }} />
           )}
 
           <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
@@ -1584,244 +2681,247 @@ export default function App() {
             style={{
               fontSize: 11,
               color: B.white,
-              background: `linear-gradient(135deg,${B.gold},${B.goldD})`,
-              border: 'none',
+              background: 'rgba(212,168,67,.14)',
+              border: `1px solid ${B.goldB}`,
               borderRadius: 999,
               padding: '8px 12px',
               cursor: 'pointer',
               fontFamily: 'inherit',
               fontWeight: 800,
-              boxShadow: '0 3px 16px rgba(212,168,67,.25)',
             }}
           >
             Stats
           </button>
         </div>
 
-        <div style={{ padding: '10px 16px 12px', background: B.navyL, borderBottom: `1px solid ${B.navyB}`, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <button
-            onClick={() => setMode('request')}
-            style={{
-              padding: '12px 14px',
-              borderRadius: 16,
-              border: `1px solid ${B.tealB}`,
-              background: B.tealF,
-              color: B.teal,
-              cursor: 'pointer',
-              textAlign: 'left',
-              fontFamily: 'inherit',
-              boxShadow: '0 10px 24px rgba(0,0,0,.14)',
-            }}
-          >
-            <div style={{ fontSize: 12.5, fontWeight: 900, marginBottom: 3 }}>Bring Sabi to your community</div>
-            <div style={{ fontSize: 10.5, color: B.mid, lineHeight: 1.35 }}>Request deployment and follow-up.</div>
-          </button>
-
-          <button
-            onClick={() => setMode('stats')}
-            style={{
-              padding: '12px 14px',
-              borderRadius: 16,
-              border: `1px solid ${B.goldB}`,
-              background: B.goldF,
-              color: B.gold,
-              cursor: 'pointer',
-              textAlign: 'left',
-              fontFamily: 'inherit',
-              boxShadow: '0 10px 24px rgba(0,0,0,.14)',
-            }}
-          >
-            <div style={{ fontSize: 12.5, fontWeight: 900, marginBottom: 3 }}>Impact Dashboard</div>
-            <div style={{ fontSize: 10.5, color: B.mid, lineHeight: 1.35 }}>View growth and onboarding activity.</div>
-          </button>
-        </div>
-
-        <div style={{ padding: '10px 16px 0', background: B.navyL }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <div style={{ fontSize: 11, color: B.mid, fontWeight: 700, letterSpacing: 0.7, textTransform: 'uppercase' }}>Language</div>
-            <div style={{ fontSize: 11, color: B.dim }}>Speak or type in your language</div>
-          </div>
-          <div className="lang-bar" style={{ padding: '0 0 10px', borderBottom: 'none', background: 'transparent' }}>
-            {Object.entries(langLabels).map(([code, label]) => (
-              <button key={code} className={`lang-pill${activeLang === code ? ' active' : ''}`} onClick={() => setActiveLang(code)}>
-                {label}
+        {screen === 'home' && !hasMessages && !isLoading && (
+          <div style={{ padding: '14px 16px 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setMode('request')}
+                style={{
+                  flex: 1,
+                  padding: '11px 12px',
+                  borderRadius: 14,
+                  border: `1px solid ${B.tealB}`,
+                  background: B.tealF,
+                  color: B.teal,
+                  fontFamily: 'inherit',
+                  fontSize: 12.5,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                Bring Sabi to your community
               </button>
-            ))}
-          </div>
-        </div>
+              <button
+                onClick={() => setMode('stats')}
+                style={{
+                  flex: 1,
+                  padding: '11px 12px',
+                  borderRadius: 14,
+                  border: `1px solid ${B.goldB}`,
+                  background: B.goldF,
+                  color: B.gold,
+                  fontFamily: 'inherit',
+                  fontSize: 12.5,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                View stats
+              </button>
+            </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
-          {screen === 'home' && !hasMessages && !isLoading && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '22px 16px 18px', gap: 16 }}>
-              <div style={{ padding: '2px 2px 4px' }}>
-                <h1 className="w1" style={{ fontSize: 24, fontWeight: 900, color: B.white, marginBottom: 8, lineHeight: 1.15 }}>
-                  {welcome.greeting}
-                </h1>
-                <p className="w2" style={{ fontSize: 14, color: B.mid, lineHeight: 1.6, maxWidth: 320 }}>
-                  {welcome.sub}
-                </p>
-              </div>
+            <div style={{ background: `linear-gradient(180deg, ${B.navyL}, ${B.navy})`, border: `1px solid ${B.navyB}`, borderRadius: 20, padding: 18 }}>
+              <div style={{ fontSize: 24, fontWeight: 900, color: B.white, lineHeight: 1.2, marginBottom: 8 }}>{welcome.greeting}</div>
+              <div style={{ fontSize: 14, color: B.mid, lineHeight: 1.7, marginBottom: 8 }}>{welcome.sub}</div>
+              <div style={{ fontSize: 11, color: B.dim, letterSpacing: 0.3 }}>{welcome.langs}</div>
+            </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: B.navyL, border: `1px solid ${B.goldB}`, borderRadius: 20, padding: 14, boxShadow: '0 10px 30px rgba(0,0,0,.22)' }}>
-                <div
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: 11, color: B.dim, letterSpacing: 0.7, textTransform: 'uppercase', fontWeight: 800 }}>Live sat price</div>
+              <div style={{ fontSize: 11, color: B.gold, fontWeight: 800 }}>1 sat ≈ ₦{satNgn}</div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {prompts.slice(0, 2).map((p, i) => (
+                <HomeActionCard
+                  key={i}
+                  icon={i === 0 ? '₿' : '⚡'}
+                  title={p.label}
+                  sub={i === 0 ? 'Check BTC price and sat value.' : 'How to buy Bitcoin with Naira.'}
+                  color={i === 0 ? B.gold : B.teal}
+                  onClick={() => {
+                    setScreen('chat')
+                    sendMessage(p.msg)
+                  }}
+                  accent="soft"
+                />
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <HomeActionCard
+                icon="🏪"
+                title="Accept Bitcoin at my shop"
+                sub="Create a merchant setup and payment QR."
+                color={B.teal}
+                onClick={() => setMode('merchant')}
+                accent="strong"
+              />
+              <HomeActionCard
+                icon="📚"
+                title="New to Bitcoin? Start here"
+                sub="A guided path that explains Bitcoin simply."
+                color={B.orange}
+                onClick={() => setMode('member')}
+                accent="strong"
+              />
+            </div>
+
+            {voiceSupported && (
+              <div
+                style={{
+                  marginTop: 2,
+                  padding: '14px 14px 12px',
+                  background: B.navyL,
+                  border: `1px solid ${B.goldB}`,
+                  borderRadius: 18,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                }}
+              >
+                <button
+                  onClick={toggleMic}
+                  className={`mic-btn${isRecording ? ' recording' : ''}`}
                   style={{
                     width: 52,
                     height: 52,
                     borderRadius: '50%',
-                    background: `linear-gradient(135deg, ${B.gold}, ${B.goldD})`,
+                    border: `1px solid ${B.goldB}`,
+                    background: isRecording ? `linear-gradient(135deg,${B.gold},${B.goldD})` : `linear-gradient(135deg, rgba(212,168,67,.16), rgba(212,168,67,.06))`,
+                    cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: '0 0 0 5px rgba(212,168,67,.12), 0 0 0 1px rgba(212,168,67,.45) inset',
                     flexShrink: 0,
-                    color: '#0D0A00',
-                    fontWeight: 900,
+                    color: isRecording ? '#0D0A00' : B.gold,
+                    boxShadow: isRecording ? '0 0 0 4px rgba(212,168,67,.12), 0 10px 24px rgba(0,0,0,.2)' : '0 8px 18px rgba(0,0,0,.18)',
                   }}
                 >
-                  ₿
-                </div>
+                  <Icons.Mic />
+                </button>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, color: B.mid, letterSpacing: 0.7, textTransform: 'uppercase', marginBottom: 4 }}>Bitcoin price context</div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: B.white, lineHeight: 1.2 }}>1 BTC ≈ ₦{btcPrice}M</div>
-                  <div style={{ fontSize: 11.5, color: B.gold, marginTop: 4 }}>1 sat ≈ ₦{satNgn}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 800, color: B.white, marginBottom: 2 }}>Voice with Sabi</div>
+                  <div style={{ fontSize: 11.2, color: B.mid, lineHeight: 1.45 }}>
+                    Tap the mic and speak. Sabi will transcribe your question and answer in voice.
+                  </div>
                 </div>
               </div>
+            )}
+          </div>
+        )}
 
-              <div className="w3" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ fontSize: 11, color: B.dim, letterSpacing: 0.7, textTransform: 'uppercase', fontWeight: 800 }}>Ask Sabi</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
-                  {prompts.slice(0, 2).map((p, i) => (
-                    <HomeActionCard
-                      key={i}
-                      icon={i === 0 ? '₿' : '⚡'}
-                      title={p.label}
-                      sub={i === 0 ? 'Get the market price and sat value.' : 'Ask how to buy Bitcoin with Naira.'}
-                      color={i === 0 ? B.gold : B.teal}
-                      onClick={() => {
-                        setScreen('chat')
-                        sendMessage(p.msg)
-                      }}
-                      accent="soft"
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="w4" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div style={{ fontSize: 11, color: B.dim, letterSpacing: 0.7, textTransform: 'uppercase', fontWeight: 800 }}>Start using Bitcoin</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
-                  <HomeActionCard
-                    icon="🏪"
-                    title="Accept Bitcoin at my shop"
-                    sub="Create a payment QR and print-ready signage."
-                    color={B.teal}
-                    onClick={() => setMode('merchant')}
-                    accent="strong"
-                  />
-                  <HomeActionCard
-                    icon="📚"
-                    title="New to Bitcoin? Start here"
-                    sub="A guided path that explains Bitcoin simply."
-                    color={B.orange}
-                    onClick={() => setMode('member')}
-                    accent="strong"
-                  />
-                </div>
-              </div>
-
-              {voiceSupported && (
-                <div style={{ marginTop: 2, padding: '14px 14px 12px', background: B.navyL, border: `1px solid ${B.goldB}`, borderRadius: 18, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <button
-                    onClick={toggleMic}
-                    className={`mic-btn${isRecording ? ' recording' : ''}`}
-                    style={{
-                      width: 52,
-                      height: 52,
-                      borderRadius: '50%',
-                      border: `1px solid ${B.goldB}`,
-                      background: isRecording ? `linear-gradient(135deg,${B.gold},${B.goldD})` : `linear-gradient(135deg, rgba(212,168,67,.16), rgba(212,168,67,.06))`,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      color: isRecording ? '#0D0A00' : B.gold,
-                      boxShadow: isRecording ? '0 0 0 4px rgba(212,168,67,.12), 0 10px 24px rgba(0,0,0,.2)' : '0 8px 18px rgba(0,0,0,.18)',
-                    }}
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          {hasMessages && (
+            <div style={{ padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {displayMsgs.map((msg, i) => {
+                const canListen = msg.r !== 'user' && (msg.audio || msg.r === 'bot')
+                return (
+                  <div
+                    key={i}
+                    className={msg.r === 'user' ? 'msg-user' : 'msg-bot'}
+                    style={{ display: 'flex', justifyContent: msg.r === 'user' ? 'flex-end' : 'flex-start', alignItems: 'flex-start', gap: 9 }}
                   >
-                    <Icons.Mic />
-                  </button>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 12.5, fontWeight: 800, color: B.white, marginBottom: 2 }}>Voice with Sabi</div>
-                    <div style={{ fontSize: 11.2, color: B.mid, lineHeight: 1.45 }}>
-                      Tap the mic and speak. Sabi will transcribe your question and answer in voice.
+                    {msg.r !== 'user' && <img src={community.appLogo} alt="Sabi" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0, marginTop: 2 }} />}
+                    <div style={{ maxWidth: '84%', display: 'flex', flexDirection: 'column', alignItems: msg.r === 'user' ? 'flex-end' : 'flex-start', gap: 6 }}>
+                      {msg.r === 'error' ? (
+                        <div className="error-bubble">{msg.c}</div>
+                      ) : (
+                        <div
+                          style={{
+                            padding: '12px 16px',
+                            fontSize: 14,
+                            lineHeight: 1.75,
+                            whiteSpace: 'pre-wrap',
+                            fontFamily: 'inherit',
+                            ...(msg.r === 'user'
+                              ? {
+                                  background: `linear-gradient(135deg,${B.gold},${B.goldD})`,
+                                  color: '#0D0A00',
+                                  fontWeight: 700,
+                                  borderRadius: '18px 18px 4px 18px',
+                                  boxShadow: '0 3px 14px rgba(212,168,67,.3)',
+                                }
+                              : {
+                                  background: B.navyL,
+                                  color: B.white,
+                                  borderRadius: '18px 18px 18px 4px',
+                                  border: `1px solid ${B.navyB}`,
+                                }),
+                          }}
+                        >
+                          {msg.file && (
+                            <div style={{ marginBottom: msg.c ? 8 : 0 }}>
+                              {msg.file.type === 'image' && msg.file.previewUrl ? (
+                                <img
+                                  src={msg.file.previewUrl}
+                                  alt="attachment"
+                                  style={{ maxWidth: 200, maxHeight: 160, borderRadius: 10, display: 'block', objectFit: 'cover' }}
+                                />
+                              ) : (
+                                <div
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 6,
+                                    background: 'rgba(212,168,67,.15)',
+                                    border: '1px solid rgba(212,168,67,.3)',
+                                    borderRadius: 8,
+                                    padding: '5px 10px',
+                                    fontSize: 11,
+                                    color: B.gold,
+                                  }}
+                                >
+                                  {msg.file.name}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {msg.c}
+                          {canListen && (
+                            <button
+                              onClick={() => {
+                                if (msg.audio) playAssistantAudio(msg.audio)
+                                else speakDevice(msg.c, msg.lang || activeLang)
+                              }}
+                              style={{
+                                marginTop: 10,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                background: 'rgba(212,168,67,.12)',
+                                border: `1px solid ${B.goldB}`,
+                                color: B.gold,
+                                borderRadius: 999,
+                                padding: '6px 10px',
+                                fontSize: 11,
+                                cursor: 'pointer',
+                                fontFamily: 'inherit',
+                                fontWeight: 800,
+                              }}
+                            >
+                              <Icons.Speaker /> Listen
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {screen === 'chat' && (
-            <div style={{ padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {displayMsgs.map((msg, i) => (
-                <div key={i} className={msg.r === 'user' ? 'msg-user' : 'msg-bot'} style={{ display: 'flex', justifyContent: msg.r === 'user' ? 'flex-end' : 'flex-start', alignItems: 'flex-start', gap: 9 }}>
-                  {msg.r !== 'user' && <img src={community.appLogo} alt="Sabi" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0, marginTop: 2 }} />}
-                  <div style={{ maxWidth: '84%', display: 'flex', flexDirection: 'column', alignItems: msg.r === 'user' ? 'flex-end' : 'flex-start', gap: 6 }}>
-                    {msg.r === 'error' ? (
-                      <div className="error-bubble">{msg.c}</div>
-                    ) : (
-                      <div
-                        style={{
-                          padding: '12px 16px',
-                          fontSize: 14,
-                          lineHeight: 1.75,
-                          whiteSpace: 'pre-wrap',
-                          fontFamily: 'inherit',
-                          ...(msg.r === 'user'
-                            ? { background: `linear-gradient(135deg,${B.gold},${B.goldD})`, color: '#0D0A00', fontWeight: 700, borderRadius: '18px 18px 4px 18px', boxShadow: '0 3px 14px rgba(212,168,67,.3)' }
-                            : { background: B.navyL, color: B.white, borderRadius: '18px 18px 18px 4px', border: `1px solid ${B.navyB}` }),
-                        }}
-                      >
-                        {msg.file && (
-                          <div style={{ marginBottom: msg.c ? 8 : 0 }}>
-                            {msg.file.type === 'image' && msg.file.previewUrl ? (
-                              <img src={msg.file.previewUrl} alt="attachment" style={{ maxWidth: 200, maxHeight: 160, borderRadius: 10, display: 'block', objectFit: 'cover' }} />
-                            ) : (
-                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(212,168,67,.15)', border: '1px solid rgba(212,168,67,.3)', borderRadius: 8, padding: '5px 10px', fontSize: 11, color: B.gold }}>
-                                {msg.file.name}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                        {msg.c}
-                        {msg.r !== 'user' && msg.audio && (
-                          <button
-                            onClick={() => playAssistantAudio(msg.audio)}
-                            style={{
-                              marginTop: 10,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 6,
-                              background: 'rgba(212,168,67,.12)',
-                              border: `1px solid ${B.goldB}`,
-                              color: B.gold,
-                              borderRadius: 999,
-                              padding: '6px 10px',
-                              fontSize: 11,
-                              cursor: 'pointer',
-                              fontFamily: 'inherit',
-                              fontWeight: 800,
-                            }}
-                          >
-                            <Icons.Speaker /> Listen
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
 
               {isLoading && (
                 <div className="msg-bot" style={{ display: 'flex', alignItems: 'flex-start', gap: 9 }}>
@@ -1844,44 +2944,78 @@ export default function App() {
           {isRecording && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px 12px', background: B.goldF, border: `1px solid ${B.goldB}`, borderRadius: 12 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: B.gold, animation: 'pulse 1s ease-in-out infinite' }} />
-              <span style={{ fontSize: 12, color: B.gold, fontWeight: 700 }}>{micError === 'Transcribing...' ? 'Transcribing...' : 'Listening… tap mic to stop'}</span>
+              <span style={{ fontSize: 12, color: B.gold, fontWeight: 700 }}>
+                {micError === 'Transcribing...' ? 'Transcribing...' : 'Listening… tap mic to stop'}
+              </span>
             </div>
           )}
+
           {micError && micError !== 'Transcribing...' && (
             <div style={{ marginBottom: 8, padding: '8px 12px', background: B.redF, border: `1px solid ${B.redB}`, borderRadius: 12 }}>
               <span style={{ fontSize: 12, color: B.red }}>{micError}</span>
             </div>
           )}
+
           {attachedFile && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: B.navy, border: `1px solid ${B.navyB}`, borderRadius: 12, padding: '7px 10px', marginBottom: 8, maxWidth: 260 }}>
               {attachedFile.type === 'image' && attachedFile.previewUrl ? (
                 <img src={attachedFile.previewUrl} alt="preview" style={{ width: 34, height: 34, borderRadius: 7, objectFit: 'cover', flexShrink: 0 }} />
               ) : (
-                <div style={{ width: 34, height: 34, borderRadius: 7, background: B.navyLL, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>📄</div>
+                <div style={{ width: 34, height: 34, borderRadius: 7, background: B.navyLL, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  📄
+                </div>
               )}
               <span style={{ fontSize: 11.5, color: B.white, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{attachedFile.name}</span>
-              <button onClick={() => setAttachedFile(null)} style={{ width: 20, height: 20, borderRadius: '50%', background: B.navyLL, border: 'none', color: B.mid, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0 }}>
+              <button
+                onClick={() => setAttachedFile(null)}
+                style={{ width: 20, height: 20, borderRadius: '50%', background: B.navyLL, border: 'none', color: B.mid, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, flexShrink: 0 }}
+              >
                 ✕
               </button>
             </div>
           )}
+
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
             <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp,application/pdf" onChange={handleFileChange} style={{ display: 'none' }} />
             <button
               className="attach-btn"
               onClick={() => fileInputRef.current?.click()}
-              style={{ width: 40, height: 40, borderRadius: 12, background: attachedFile ? B.goldF : 'transparent', border: `1px solid ${attachedFile ? B.goldB : B.navyB}`, color: attachedFile ? B.gold : B.dim, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 12,
+                background: attachedFile ? B.goldF : 'transparent',
+                border: `1px solid ${attachedFile ? B.goldB : B.navyB}`,
+                color: attachedFile ? B.gold : B.dim,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
             >
               <Icons.Attach />
             </button>
+
             <input
               className="chat-input"
               value={inputText}
               onChange={e => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={isRecording ? 'Listening…' : attachedFile ? 'Add a question… (optional)' : 'Ask anything…'}
-              style={{ flex: 1, padding: '13px 18px', background: B.navy, border: `1px solid ${B.navyB}`, borderRadius: 28, fontSize: 14, color: B.white, fontFamily: 'inherit', transition: 'border-color 0.2s,box-shadow 0.2s' }}
+              style={{
+                flex: 1,
+                padding: '13px 18px',
+                background: B.navy,
+                border: `1px solid ${B.navyB}`,
+                borderRadius: 28,
+                fontSize: 14,
+                color: B.white,
+                fontFamily: 'inherit',
+                transition: 'border-color 0.2s,box-shadow 0.2s',
+              }}
             />
+
             {voiceSupported && !inputText.trim() && !attachedFile && (
               <button
                 className={`mic-btn${isRecording ? ' recording' : ''}`}
@@ -1890,33 +3024,63 @@ export default function App() {
                   width: 46,
                   height: 46,
                   borderRadius: '50%',
-                  border: 'none',
-                  background: isRecording ? `linear-gradient(135deg,${B.gold},${B.goldD})` : B.navyLL,
+                  border: `1px solid ${B.goldB}`,
+                  background: isRecording ? `linear-gradient(135deg,${B.gold},${B.goldD})` : `linear-gradient(135deg, rgba(212,168,67,.16), rgba(212,168,67,.05))`,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
-                  color: isRecording ? '#0D0A00' : B.mid,
-                  boxShadow: isRecording ? '0 3px 16px rgba(212,168,67,.5)' : 'none',
+                  color: isRecording ? '#0D0A00' : B.gold,
+                  boxShadow: isRecording ? '0 3px 16px rgba(212,168,67,.5)' : '0 0 0 3px rgba(212,168,67,.08)',
                 }}
               >
                 <Icons.Mic />
               </button>
             )}
+
             {(inputText.trim() || attachedFile) && (
               <button
                 onClick={() => sendMessage()}
                 disabled={isLoading}
                 className="send-btn"
-                style={{ width: 46, height: 46, borderRadius: '50%', border: 'none', background: !isLoading ? `linear-gradient(135deg,${B.gold},${B.goldD})` : B.navyLL, cursor: !isLoading ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: !isLoading ? '0 3px 16px rgba(212,168,67,.4)' : 'none' }}
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: !isLoading ? `linear-gradient(135deg,${B.gold},${B.goldD})` : B.navyLL,
+                  cursor: !isLoading ? 'pointer' : 'default',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  boxShadow: !isLoading ? '0 3px 16px rgba(212,168,67,.4)' : 'none',
+                }}
               >
                 <Icons.Send color={!isLoading ? '#0D0A00' : B.dim} />
               </button>
             )}
           </div>
+
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 8 }}>
             <div style={{ fontSize: 9, color: B.dim, letterSpacing: 0.8 }}>Bitcoin Abuja · Powered by Fedi</div>
+            <button
+              onClick={() => setMode('request')}
+              style={{
+                fontSize: 9,
+                color: B.gold,
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                letterSpacing: 0.5,
+                textDecoration: 'underline',
+                fontWeight: 700,
+              }}
+            >
+              Bring Sabi to your community
+            </button>
           </div>
         </div>
       </div>
